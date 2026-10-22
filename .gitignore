@@ -14,8 +14,11 @@ Data pipeline/hotel_booking_pipeline/data/raw/*.csv
 *.csv
 *.xlsx
 
-# Pipeline outputs are tracked by DVC, not git
-Model pipeline/artifacts/
+# Fitted models are never committed
 Model pipeline/models/
 *.pkl
 *.joblib
+
+# Test caches and Office lock files
+.pytest_cache/
+~$*

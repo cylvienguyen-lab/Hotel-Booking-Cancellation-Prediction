@@ -1,0 +1,36 @@
+{
+  "gold_rows": 38233,
+  "status_by_target": {
+    "0": {
+      "Canceled": 0,
+      "Check-Out": 33697,
+      "No-Show": 0
+    },
+    "1": {
+      "Canceled": 3931,
+      "Check-Out": 0,
+      "No-Show": 605
+    }
+  },
+  "positive_status_timing": {
+    "before_arrival_1_to_13_days": 3759,
+    "on_arrival_day": 777,
+    "on_or_before_cutoff": 0
+  },
+  "cutoff_boundary": {
+    "13": {
+      "eligible": 235,
+      "excluded": 0
+    },
+    "14": {
+      "eligible": 0,
+      "excluded": 331
+    },
+    "15": {
+      "eligible": 0,
+      "excluded": 400
+    }
+  },
+  "early_terminal_scope_rows": 26261,
+  "early_terminal_retained_in_gold": 0
+}

@@ -1,8 +1,4 @@
-"""Refit on eligible development rows, calibrate, and score test once.
-
-Rehearsal uses the last CV fold as a stand-in for test and reproduces its scores.
-"""
-import pickle
+"""Notebook 01 refit rehearsal on the last validation fold, with no held-out input."""
 
 import pandas as pd
 
@@ -46,8 +42,9 @@ def lookback(train, end_date, months):
     return train.loc[train['CutoffDate'].ge(end_date - pd.DateOffset(months=months))].copy()
 
 
-def run_final(hotel, params, dev, test, split_tables, cv_tables, tuned, output_root,
-              rehearsal=True):
+def run_final(hotel, params, dev, split_tables, cv_tables, tuned, output_root, *, rehearsal):
+    if rehearsal is not True:
+        raise ValueError('Notebook 01 supports rehearsal only')
     split_config = params['split']
     groups = common.feature_config(params, params['features'])
     common.check_features(groups, common.load_contract())
@@ -60,61 +57,35 @@ def run_final(hotel, params, dev, test, split_tables, cv_tables, tuned, output_r
     source = oof.merge(common.label_dates(split_tables['fit_eligibility']), on=common.KEYS,
                        how='left', validate='one_to_one')
 
-    if rehearsal:
-        # Use the last CV fold as a stand-in test window
-        last = split_config['n_folds']
-        fit_date, train, evaluation = folds.fold_cohorts(dev, split_tables['cv_membership'], last, columns)
-        train = lookback(train, fit_date, params['train_lookback_months'])
-        past = source.loc[source['Fold'].lt(last)]
-        calibration_rows = past.loc[past['LabelAvailableDate'].lt(fit_date)]
-        directory = output_root / 'final_rehearsal' / hotel
-    else:
-        # Refit on development rows whose labels were available at test_start; score every test row
-        fit_date = pd.Timestamp(split_config['test_start'])
-        if not (test['CutoffDate'].ge(fit_date).all()
-                and test['CutoffDate'].lt(pd.Timestamp(split_config['test_end'])).all()
-                and not set(test['Booking_ID']) & set(dev['Booking_ID'])):
-            raise AssertionError('Test rows fall outside the held-out window')
-        train = lookback(cohort(split_tables['refit_membership'], dev, columns), fit_date,
-                         params['train_lookback_months'])
-        evaluation = test
-        calibration_rows = source.loc[source['LabelAvailableDate'].lt(fit_date)]
-        directory = output_root / 'final' / hotel
+    # This function cannot receive a held-out DataFrame. Reject any out-of-scope dev rows.
+    if not dev['CutoffDate'].lt(pd.Timestamp(split_config['test_start'])).all():
+        raise ValueError('Rehearsal accepts development bookings only')
+    last = split_config['n_folds']
+    if last != 4:
+        raise ValueError('Notebook 01 rehearsal is fixed to validation fold 4')
+    fit_date, train, evaluation = folds.fold_cohorts(dev, split_tables['cv_membership'], last, columns)
+    train = lookback(train, fit_date, params['train_lookback_months'])
+    past = source.loc[source['Fold'].lt(last)]
+    calibration_rows = past.loc[past['LabelAvailableDate'].lt(fit_date)]
+    directory = output_root / 'final_rehearsal' / hotel
     if not train['CutoffDate'].lt(fit_date).all():
         raise AssertionError('Refit rows must precede the fit date')
 
     pipeline, state, scores, predictions = refit_and_score(
         hotel, params, model, groups, train, evaluation, calibration_rows)
-    common.write_tables(directory, {'test_predictions.csv': predictions},
+    common.write_tables(directory, {'validation_predictions.csv': predictions},
                         extra={'model': model, 'features': params['features'],
                                'calibration': params['calibration'], 'fit_date': str(fit_date.date()),
                                'train_rows': len(train), 'calibration_rows': len(calibration_rows)})
     summary = {name: {key: float(value) for key, value in values.items()} for name, values in scores.items()}
 
-    if rehearsal:
-        # The rehearsal must reproduce the cv stage's last-fold raw and calibrated scores
-        fold_row = cv_tables['fold_metrics'].set_index('Fold').loc[last]
-        calibrated_row = cv_tables['calibration_metrics'].set_index('Fold').loc[last]
-        differences = {name: max(abs(summary['raw'][name] - fold_row[name]),
-                                 abs(summary['calibrated'][name] - calibrated_row[name]))
-                       for name in params['evaluation']['metrics']}
-        common.write_json(directory / 'rehearsal_check.json', {'max_abs_difference': differences})
-        if max(differences.values()) > common.TOLERANCE:
-            raise AssertionError(f'{hotel}: rehearsal differs from cv fold {last}: {differences}')
-        print(f'{hotel}: rehearsal on fold {last} reproduces cv scores (max diff {max(differences.values()):.1e})')
-        return {'scores': summary, 'predictions': predictions, 'check': differences}
-
-    # Package the refit model, calibrator and test scores
-    model_directory = output_root / 'models' / hotel
-    model_directory.mkdir(parents=True, exist_ok=True)
-    (model_directory / 'model.pkl').write_bytes(pickle.dumps(pipeline))
-    common.write_json(model_directory / 'calibrator.json',
-                      {'method': params['calibration'], 'state': state})
-    common.write_json(model_directory / 'model_card.json', {
-        'hotel': hotel, 'model': model, 'features': params['features'], 'feature_config': groups,
-        'calibration': params['calibration'], 'fit_date': str(fit_date.date()),
-        'train_rows': len(train), 'train_lookback_months': params['train_lookback_months']})
-    common.write_json(directory / 'summary.json', summary)
-    print(f"{hotel}: final test LogLoss {summary['calibrated']['LogLoss']:.5f}")
-    return {'scores': summary, 'predictions': predictions, 'model': pipeline,
-            'calibrator': state}
+    fold_row = cv_tables['fold_metrics'].set_index('Fold').loc[last]
+    calibrated_row = cv_tables['calibration_metrics'].set_index('Fold').loc[last]
+    differences = {name: max(abs(summary['raw'][name] - fold_row[name]),
+                             abs(summary['calibrated'][name] - calibrated_row[name]))
+                   for name in params['evaluation']['metrics']}
+    common.write_json(directory / 'rehearsal_check.json', {'max_abs_difference': differences})
+    if max(differences.values()) > common.TOLERANCE:
+        raise AssertionError(f'{hotel}: rehearsal differs from cv fold {last}: {differences}')
+    print(f'{hotel}: fold {last} rehearsal max difference {max(differences.values()):.1e}')
+    return {'scores': summary, 'predictions': predictions, 'check': differences}

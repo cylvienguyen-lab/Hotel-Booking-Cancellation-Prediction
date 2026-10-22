@@ -16,7 +16,10 @@ def fit_and_apply(method, ready, scores):
 
 def evaluate_folds(hotel, method, oof, dates, fold_metrics, test_start):
     # Fold k uses OOF rows from folds < k whose labels were available before fold k's fit date
-    source = oof.merge(dates, on=['Hotel', 'Booking_ID'], how='left', validate='one_to_one')
+    # ef05228 cell 161 sorted feature OOF by hotel/feature/fold/booking before calibration.
+    # Restore that input order; floating-point reductions in Platt fitting depend on it.
+    source = oof.sort_values(['Hotel', 'Fold', 'Booking_ID']).reset_index(drop=True).merge(
+        dates, on=['Hotel', 'Booking_ID'], how='left', validate='one_to_one')
     if source['LabelAvailableDate'].isna().any():
         raise AssertionError('OOF rows without a label-availability date')
     rows, parts, states = [], [], {}

@@ -30,19 +30,46 @@ def load_contract():
     return json.loads((GOLD_ROOT / 'feature_contract.json').read_text(encoding='utf-8'))
 
 
-def load_gold(hotel, spark):
-    """Read Gold with the notebook's Spark reader; no pandas parquet engine is required."""
-    model = spark.read.parquet(str(GOLD_ROOT / 'model_dataset' /
-                                   f'gold_model_dataset_{hotel}.parquet')).toPandas()
-    labels = spark.read.parquet(str(GOLD_ROOT / 'labels' /
-                                    f'gold_label_store_{hotel}.parquet')).toPandas()
+def load_gold(hotel, spark, development_end):
+    """Collect only development bookings and their outcome metadata.
+
+    The date predicate and development-key filter are applied in Spark, before toPandas.
+    Source files contain both periods; no held-out rows are collected or scored.
+    """
+    from pyspark.sql import functions as F
+
+    source = spark.read.parquet(str(GOLD_ROOT / 'model_dataset' /
+                                    f'gold_model_dataset_{hotel}.parquet'))
+    development = source.filter(F.col('CutoffDate') < F.lit(development_end).cast('date'))
+    model = development.toPandas()
+    label_source = spark.read.parquet(str(GOLD_ROOT / 'labels' /
+                                          f'gold_label_store_{hotel}.parquet'))
+    metadata = label_source.filter(F.col('Booking_ID').isin(model['Booking_ID'].tolist()))
+    labels = metadata.select('Booking_ID', 'ReservationStatus', 'ReservationStatusDate').toPandas()
     loaded = model.merge(labels[['Booking_ID', 'ReservationStatus', 'ReservationStatusDate']],
                          on='Booking_ID', how='left', validate='one_to_one')
     for column in GOLD_DATE_COLUMNS:
         loaded[column] = pd.to_datetime(loaded[column], errors='raise')
     if len(loaded) != len(model) or not loaded['Booking_ID'].is_unique:
         raise ValueError(f'{hotel}: outcome metadata join changed the modelling grain.')
+    if not loaded['CutoffDate'].lt(pd.Timestamp(development_end)).all():
+        raise AssertionError('Only development rows may be collected by Notebook 01')
     return loaded
+
+
+def held_out_calendar_counts(hotel, spark, split_config):
+    """The authorized exception: read only CutoffDate for held-out counts and bounds."""
+    from pyspark.sql import functions as F
+
+    dates = spark.read.parquet(str(GOLD_ROOT / 'model_dataset' /
+                                   f'gold_model_dataset_{hotel}.parquet')).select('CutoffDate')
+    dates = dates.filter((F.col('CutoffDate') >= F.lit(split_config['test_start']).cast('date'))
+                         & (F.col('CutoffDate') < F.lit(split_config['test_end']).cast('date')))
+    row = dates.agg(F.count('*').alias('Rows'), F.min('CutoffDate').alias('MinCutoffDate'),
+                    F.max('CutoffDate').alias('MaxCutoffDate')).first()
+    return {'Hotel': hotel, 'Cohort': 'Test', 'Rows': row['Rows'], 'Positives': 'withheld',
+            'MinCutoffDate': pd.Timestamp(row['MinCutoffDate']),
+            'MaxCutoffDate': pd.Timestamp(row['MaxCutoffDate'])}
 
 
 def table_schema(table):

@@ -65,6 +65,7 @@ def run_tuning(hotel, params, dev, membership, output_root):
             'GainVsDummy': windows['GainVsDummy'].mean(),
             'FoldsBeatingDummy': int(windows['GainVsDummy'].gt(common.TOLERANCE).sum()),
             'PooledOOFLogLoss': pooled['LogLoss'],
+            'MeanAbsoluteWindowBias': windows['ProbabilityBias'].abs().mean(),
         })
     summary = pd.DataFrame(summary_rows).sort_values(
         ['ModelKey', primary, 'ConfigID'], kind='stable').reset_index(drop=True)
@@ -72,14 +73,21 @@ def run_tuning(hotel, params, dev, membership, output_root):
     best = summary.loc[summary['RankWithinModel'].eq(1)]
 
     # Publish winners for the cv stage and summaries for review
-    tuned = {}
+    tuned, winners = {}, {}
     for row in best.itertuples():
         model_key, parameters, grid_params, _ = predictions[row.ConfigID]
         tuned[model_key] = {'config_id': row.ConfigID, 'grid_params': grid_params,
                             'features': tuning['features'], primary: float(getattr(row, primary)),
                             'params': parameters}
+        winner_metrics = fold_metrics.loc[fold_metrics['ConfigID'].eq(row.ConfigID)].copy()
+        winner_oof = predictions[row.ConfigID][3].copy()
+        winner_oof['ConfigID'] = row.ConfigID
+        winners[model_key] = {'fold_metrics': winner_metrics, 'oof_predictions': winner_oof,
+                              'params': parameters, 'config_id': row.ConfigID}
     common.write_json(output_root / 'tuning' / hotel / 'tuned.json', tuned)
     common.write_tables(output_root / 'tuning' / hotel,
-                        {'fold_metrics.csv': fold_metrics, 'cv_summary.csv': summary})
+                        {'fold_metrics.csv': fold_metrics, 'cv_summary.csv': summary,
+                         'best_oof_predictions.csv': pd.concat(
+                             [run['oof_predictions'] for run in winners.values()], ignore_index=True)})
     print(best[['ModelKey', 'ConfigID', 'GridParameters', primary]].to_string(index=False))
-    return {'tuned': tuned, 'fold_metrics': fold_metrics, 'summary': summary}
+    return {'tuned': tuned, 'fold_metrics': fold_metrics, 'summary': summary, 'winners': winners}

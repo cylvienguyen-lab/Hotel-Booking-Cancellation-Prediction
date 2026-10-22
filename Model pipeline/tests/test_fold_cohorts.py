@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-import pytest
+import unittest
 
 
 MODEL_DIR = Path(__file__).resolve().parents[1]
@@ -14,7 +14,7 @@ sys.path.insert(0, str(MODEL_DIR / "src"))
 from folds import fold_cohorts, run_fold  # noqa: E402
 
 
-def test_dummy_oof_matches_membership_and_labels():
+def check_dummy_oof_matches_membership_and_labels():
     dev = pd.DataFrame({
         "Hotel": ["H1"] * 4,
         "Booking_ID": ["a", "b", "c", "d"],
@@ -39,7 +39,7 @@ def test_dummy_oof_matches_membership_and_labels():
     assert result["metrics"]["ValidationRows"] == 2
 
 
-def test_missing_membership_key_fails_before_fitting():
+def check_missing_membership_key_fails_before_fitting():
     dev = pd.DataFrame({
         "Hotel": ["H1"], "Booking_ID": ["a"],
         "CutoffDate": pd.to_datetime(["2016-06-01"]),
@@ -50,5 +50,13 @@ def test_missing_membership_key_fails_before_fitting():
         "Fold": [1, 1], "FitDate": pd.to_datetime(["2016-07-01"] * 2),
         "Role": ["Train", "Validation"],
     })
-    with pytest.raises(ValueError, match="unmatched or empty Validation cohort"):
+    with unittest.TestCase().assertRaisesRegex(ValueError, "unmatched or empty Validation cohort"):
         fold_cohorts(dev, membership, 1, ["LeadTime"])
+
+
+class TestFoldCohorts(unittest.TestCase):
+    def test_dummy_oof_matches_membership_and_labels(self):
+        check_dummy_oof_matches_membership_and_labels()
+
+    def test_missing_membership_key_fails_before_fitting(self):
+        check_missing_membership_key_fails_before_fitting()

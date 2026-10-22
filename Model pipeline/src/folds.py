@@ -138,6 +138,8 @@ def run_fold(hotel, fold, estimator_name, feature_set_name, groups, model_params
         'ValidationRows': metrics.pop('Rows'), 'ValidationPositives': metrics.pop('Positives'),
         'ValidationCancelRate': metrics.pop('CancelRate'), **metrics,
         'InputColumns': len(columns), 'ProcessedColumns': processed_columns, **extra,
+        'MeanProbability': float(probabilities.mean()),
+        'ProbabilityBias': float(probabilities.mean() - valid_y.mean()),
     }
     if lookback_months is not None:
         row.update({'TrainWindowStart': train_start,
@@ -148,6 +150,8 @@ def run_fold(hotel, fold, estimator_name, feature_set_name, groups, model_params
         row.update({f'Train{name}': scores[name] for name in ('LogLoss', 'BrierScore',
                                                               'ROC_AUC', 'AveragePrecision')})
         row['GeneralizationGap'] = row['LogLoss'] - row['TrainLogLoss']
+        prior = np.full(len(train_y), train_y.mean())
+        row['DummyTrainLogLoss'] = model_evaluation.evaluate_predictions(train_y, prior)['LogLoss']
     predictions = valid[KEYS + ['CutoffDate', TARGET]].rename(
         columns={'CutoffDate': 'PredictionDate'}).copy()
     predictions.insert(2, 'Model', estimator_name)

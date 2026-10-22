@@ -16,6 +16,7 @@ Data pipeline/hotel_booking_pipeline/data/raw/*.csv
 
 # Fitted models are never committed
 Model pipeline/models/
+Model pipeline/outputs/
 *.pkl
 *.joblib
 

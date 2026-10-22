@@ -1,5 +1,4 @@
-"""Stage tune: temporal grid search per model for one hotel; writes the winning parameters."""
-import argparse
+"""Temporal grid search per model for one hotel."""
 import json
 
 import numpy as np
@@ -11,19 +10,13 @@ import folds
 from utils import model_evaluation
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--hotel', required=True)
-    hotel = parser.parse_args().hotel
-    params = common.load_params()
+def run_tuning(hotel, params, dev, membership, output_root):
     split_config, tuning = params['split'], params['tuning']
     primary = params['evaluation']['primary_metric']
     metric_columns = params['evaluation']['metrics']
     groups = common.feature_config(params, tuning['features'])
     common.check_features(groups, common.load_contract())
     n_inputs = len(common.feature_columns(groups))
-    dev = common.read_parquet(common.ARTIFACTS / 'data' / hotel / 'dev.parquet')
-    membership = common.read_tables(common.ARTIFACTS / 'split' / hotel)['cv_membership.csv']
     fold_ids = range(1, split_config['n_folds'] + 1)
 
     # Score the training-prior Dummy once per window as the shared reference
@@ -85,13 +78,8 @@ def main():
         tuned[model_key] = {'config_id': row.ConfigID, 'grid_params': grid_params,
                             'features': tuning['features'], primary: float(getattr(row, primary)),
                             'params': parameters}
-    common.write_json(common.TUNED_PARAMS / f'{hotel}.json', tuned)
-    common.write_tables(common.ARTIFACTS / 'tuning' / hotel,
+    common.write_json(output_root / 'tuning' / hotel / 'tuned.json', tuned)
+    common.write_tables(output_root / 'tuning' / hotel,
                         {'fold_metrics.csv': fold_metrics, 'cv_summary.csv': summary})
-    common.write_json(common.METRICS / f'tuning_{hotel}.json',
-                      {key: {primary: value[primary]} for key, value in tuned.items()})
     print(best[['ModelKey', 'ConfigID', 'GridParameters', primary]].to_string(index=False))
-
-
-if __name__ == '__main__':
-    main()
+    return {'tuned': tuned, 'fold_metrics': fold_metrics, 'summary': summary}

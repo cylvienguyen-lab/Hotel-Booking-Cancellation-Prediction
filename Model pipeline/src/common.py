@@ -1,10 +1,9 @@
-"""Shared paths, parameters, Gold loading and table I/O for the DVC stages."""
+"""Shared paths, feature settings and table I/O for notebook experiments."""
 import json
 import sys
 from pathlib import Path
 
 import pandas as pd
-import yaml
 from threadpoolctl import threadpool_limits
 
 # LR (lbfgs) results change in the last digits with the BLAS thread count; the notebook runs
@@ -17,9 +16,7 @@ if str(MODEL_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_DIR))
 
 GOLD_ROOT = PROJECT_ROOT / 'Data pipeline' / 'hotel_booking_pipeline' / 'datamart' / 'gold'
-ARTIFACTS = MODEL_DIR / 'artifacts'
-METRICS = MODEL_DIR / 'metrics'
-TUNED_PARAMS = MODEL_DIR / 'tuned_params'
+OUTPUTS = MODEL_DIR / 'outputs'
 TARGET = 'IsCanceled'
 KEYS = ['Hotel', 'Booking_ID']
 FEATURE_GROUPS = ('numeric', 'binary', 'categorical')
@@ -29,21 +26,16 @@ GOLD_DATE_COLUMNS = ('ArrivalDate', 'BookingCreatedDate', 'CutoffDate', 'FXObser
 TOLERANCE = 1e-12
 
 
-def load_params():
-    return yaml.safe_load((PROJECT_ROOT / 'params.yaml').read_text(encoding='utf-8'))
-
-
 def load_contract():
     return json.loads((GOLD_ROOT / 'feature_contract.json').read_text(encoding='utf-8'))
 
 
-def load_gold(hotel):
-    # Read the model dataset and outcome metadata (notebook 2.1-2.2). The pyarrow reader was
-    # checked against the notebook's Spark toPandas() frames: same values, dtypes and row order
-    model = pd.read_parquet(GOLD_ROOT / 'model_dataset' / f'gold_model_dataset_{hotel}.parquet',
-                            engine='pyarrow')
-    labels = pd.read_parquet(GOLD_ROOT / 'labels' / f'gold_label_store_{hotel}.parquet',
-                             engine='pyarrow')
+def load_gold(hotel, spark):
+    """Read Gold with the notebook's Spark reader; no pandas parquet engine is required."""
+    model = spark.read.parquet(str(GOLD_ROOT / 'model_dataset' /
+                                   f'gold_model_dataset_{hotel}.parquet')).toPandas()
+    labels = spark.read.parquet(str(GOLD_ROOT / 'labels' /
+                                    f'gold_label_store_{hotel}.parquet')).toPandas()
     loaded = model.merge(labels[['Booking_ID', 'ReservationStatus', 'ReservationStatusDate']],
                          on='Booking_ID', how='left', validate='one_to_one')
     for column in GOLD_DATE_COLUMNS:
@@ -51,17 +43,6 @@ def load_gold(hotel):
     if len(loaded) != len(model) or not loaded['Booking_ID'].is_unique:
         raise ValueError(f'{hotel}: outcome metadata join changed the modelling grain.')
     return loaded
-
-
-def write_parquet(table, path):
-    # Save a data partition and require an exact read-back
-    path.parent.mkdir(parents=True, exist_ok=True)
-    table.to_parquet(path, index=False, engine='pyarrow')
-    pd.testing.assert_frame_equal(table.reset_index(drop=True), read_parquet(path), check_exact=True)
-
-
-def read_parquet(path):
-    return pd.read_parquet(path, engine='pyarrow')
 
 
 def table_schema(table):

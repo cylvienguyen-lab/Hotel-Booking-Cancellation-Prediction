@@ -1,5 +1,4 @@
-"""Stage split: temporal memberships for one hotel and separate development/test data files."""
-import argparse
+"""Temporal split and label eligibility for one hotel."""
 import json
 
 import pandas as pd
@@ -96,15 +95,8 @@ def audit_split(hotel, source, result, split_config):
     return pd.DataFrame(checks)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--hotel', required=True)
-    hotel = parser.parse_args().hotel
-    params = common.load_params()
-    split_config = dict(params['split'])
-
-    # Split the full Gold table; this and the final stage are the only readers of test rows
-    model_data = common.load_gold(hotel)
+def run_split(hotel, model_data, config, output_root):
+    split_config = dict(config['split'])
     before = model_data.copy(deep=True)
     result = model_split.make_splits(model_data, split_config)
     pd.testing.assert_frame_equal(model_data, before)
@@ -115,7 +107,7 @@ def main():
         raise AssertionError(f'{hotel} split audit failed')
 
     # Save memberships in the notebook's CSV format; the audit omits Test outcome counts
-    split_directory = common.ARTIFACTS / 'split' / hotel
+    split_directory = output_root / 'split' / hotel
     partition_summary = result['audit']['partition_summary'].copy()
     partition_summary['Positives'] = partition_summary['Positives'].astype('Int64')
     partition_summary.loc[partition_summary['Cohort'].eq('Test'), 'Positives'] = pd.NA
@@ -130,17 +122,11 @@ def main():
         'partition_summary': records(partition_summary), 'checks': records(checks),
     })
 
-    # Write development and test rows to separate files so only the final stage reads test
+    # Keep data partitions in memory; write only the audit and memberships.
     partition = result['partition_membership'].set_index('Booking_ID')['Partition']
     labels = model_data['Booking_ID'].map(partition)
-    data_directory = common.ARTIFACTS / 'data' / hotel
-    common.write_parquet(model_data.loc[labels.eq('Development')].reset_index(drop=True),
-                         data_directory / 'dev.parquet')
-    common.write_parquet(model_data.loc[labels.eq('Test')].reset_index(drop=True),
-                         data_directory / 'test.parquet')
+    dev = model_data.loc[labels.eq('Development')].reset_index(drop=True)
+    test = model_data.loc[labels.eq('Test')].reset_index(drop=True)
     print(f'{hotel}: {len(checks)} split checks passed | development {labels.eq("Development").sum():,}'
           f' | test {labels.eq("Test").sum():,}')
-
-
-if __name__ == '__main__':
-    main()
+    return {'tables': result, 'checks': checks, 'dev': dev, 'test': test}

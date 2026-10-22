@@ -1,9 +1,0 @@
-# Host environment for the src/ scripts (Python 3.12). Modelling pins match requirements.txt (Docker);
-# Gold is read with pyarrow instead of Spark, so no Java is needed.
-numpy==2.2.2
-pandas==2.2.3
-scipy==1.15.1
-scikit-learn==1.6.1
-xgboost-cpu==3.0.5
-pyarrow==19.0.1
-PyYAML==6.0.2

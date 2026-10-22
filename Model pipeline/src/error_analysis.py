@@ -3,7 +3,6 @@
 Rebuilt from reports/rf17_error_analysis_v1 (its original code was not kept); the rules
 below reproduce that run's booking_errors.csv and group_errors.csv.
 """
-import argparse
 
 import numpy as np
 import pandas as pd
@@ -68,22 +67,14 @@ def analyse(oof, dev, membership, settings):
     return bookings, groups, inner_edges
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--hotel', required=True)
-    hotel = parser.parse_args().hotel
-    settings = common.load_params()['error_analysis']
-    dev = common.read_parquet(common.ARTIFACTS / 'data' / hotel / 'dev.parquet')
-    membership = common.read_tables(common.ARTIFACTS / 'split' / hotel)['cv_membership.csv']
-    oof = common.read_tables(common.ARTIFACTS / 'cv' / hotel)['oof_predictions.csv']
+def run_error_analysis(hotel, config, dev, membership, oof, output_root):
+    settings = config['error_analysis']
     bookings, groups, inner_edges = analyse(oof, dev, membership, settings)
-    common.write_tables(common.ARTIFACTS / 'error_analysis' / hotel,
+    common.write_tables(output_root / 'error_analysis' / hotel,
                         {'booking_errors.csv': bookings, 'group_errors.csv': groups},
                         extra={'lead_time_inner_edges': inner_edges.tolist(),
                                'tail_quantile': settings['tail_quantile']})
     print(f'{hotel}: {len(bookings):,} bookings | LeadTime edges {inner_edges.tolist()} | '
           f'{int(bookings["HighLossWithinClass"].sum()):,} high-loss bookings')
-
-
-if __name__ == '__main__':
-    main()
+    return {'booking_errors': bookings, 'group_errors': groups,
+            'lead_time_inner_edges': inner_edges}

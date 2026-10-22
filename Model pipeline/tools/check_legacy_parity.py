@@ -1,9 +1,6 @@
-"""Compare DVC pipeline artifacts with the notebook's frozen reports/ and splits/ outputs.
+"""Compare notebook outputs with frozen reports/ and splits/ at 1e-12.
 
-Keys, counts, labels and dates must match exactly. Most floats use the notebook's 1e-12
-replay tolerance. Tuning validation/loss metrics allow 1e-8, and training ROC-AUC/AP
-allow 1e-6: replayed LR fits on this host differ below these bounds while their
-validation rankings and selected configurations are unchanged. Larger shifts still fail.
+Keys, counts, labels and dates must match exactly.
 
     python "Model pipeline/tools/check_legacy_parity.py" [--rolling]
 """
@@ -55,11 +52,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--rolling', action='store_true', help='replay rolling_12m_v1 in memory')
     arguments = parser.parse_args()
-    params = common.load_params()
+    art = common.OUTPUTS
+    params = json.loads((art / 'run_config.json').read_text(encoding='utf-8'))
     label = {'lr': 'LR18', 'rf': 'RF18', 'xgb': 'XGB18'}
 
     for hotel in params['hotels']:
-        art = common.ARTIFACTS
         # Split memberships must be byte-identical
         for name in ('partition_membership', 'cv_membership', 'fit_eligibility', 'refit_membership',
                      'calibration_membership'):
@@ -75,11 +72,11 @@ def main():
                 old_tuning, ['ConfigID', 'Fold'],
                 exact=['TrainRows', 'TrainPositives', 'ValidationRows', 'ValidationPositives', 'ProcessedColumns'],
                 floats=METRICS + ['TrainLogLoss', 'TrainBrierScore', 'DummyLogLoss', 'GainVsDummy'],
-                tolerance=1e-8)
+                tolerance=common.TOLERANCE)
         compare(f'{hotel} tuning train ranking metrics (25 configs)', tuning,
                 old_tuning, ['ConfigID', 'Fold'],
-                floats=['TrainROC_AUC', 'TrainAveragePrecision'], tolerance=1e-6)
-        tuned = json.loads((common.TUNED_PARAMS / f'{hotel}.json').read_text(encoding='utf-8'))
+                floats=['TrainROC_AUC', 'TrainAveragePrecision'], tolerance=common.TOLERANCE)
+        tuned = json.loads((art / 'tuning' / hotel / 'tuned.json').read_text(encoding='utf-8'))
         legacy_best = legacy_table(LEGACY / 'tuning_round1_v1' / hotel / 'cv_summary.csv')
         legacy_best = legacy_best.loc[legacy_best['BestWithinModel'].astype(str).eq('True')]
         legacy_best = dict(zip(legacy_best['ModelLabel'], legacy_best['ConfigID']))
@@ -131,7 +128,14 @@ def main():
 
         # Rolling 12-month history replayed with the shared fold runner
         if arguments.rolling:
-            dev = common.read_parquet(art / 'data' / hotel / 'dev.parquet')
+            from pyspark.sql import SparkSession
+            from utils import model_split
+            spark = SparkSession.builder.appName('parity_rolling').master('local[2]').getOrCreate()
+            gold = common.load_gold(hotel, spark)
+            partition = model_split.make_splits(gold, params['split'])['partition_membership']
+            labels = gold['Booking_ID'].map(partition.set_index('Booking_ID')['Partition'])
+            dev = gold.loc[labels.eq('Development')].reset_index(drop=True)
+            spark.stop()
             membership = common.read_tables(art / 'split' / hotel)['cv_membership.csv']
             groups = common.feature_config(params, 'no_time18')
             for key in ('rf', 'xgb'):

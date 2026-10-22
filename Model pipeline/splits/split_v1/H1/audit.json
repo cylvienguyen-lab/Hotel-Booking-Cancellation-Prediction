@@ -1,0 +1,391 @@
+{
+  "hotel": "H1",
+  "cv_summary": [
+    {
+      "Hotel": "H1",
+      "Fold": 1,
+      "FitDate": "2016-07-01T00:00:00",
+      "ValidationEnd": "2016-09-01T00:00:00",
+      "TrainCandidates": 9077,
+      "TrainRows": 8618,
+      "TrainPositives": 719,
+      "ValidationRows": 1779,
+      "ValidationPositives": 115,
+      "TrainLabelsUnavailable": 459,
+      "ValidationLabelsUnavailableAtRefit": 0
+    },
+    {
+      "Hotel": "H1",
+      "Fold": 2,
+      "FitDate": "2016-09-01T00:00:00",
+      "ValidationEnd": "2016-11-01T00:00:00",
+      "TrainCandidates": 10856,
+      "TrainRows": 10353,
+      "TrainPositives": 825,
+      "ValidationRows": 1936,
+      "ValidationPositives": 112,
+      "TrainLabelsUnavailable": 503,
+      "ValidationLabelsUnavailableAtRefit": 0
+    },
+    {
+      "Hotel": "H1",
+      "Fold": 3,
+      "FitDate": "2016-11-01T00:00:00",
+      "ValidationEnd": "2017-01-01T00:00:00",
+      "TrainCandidates": 12792,
+      "TrainRows": 12291,
+      "TrainPositives": 945,
+      "ValidationRows": 1152,
+      "ValidationPositives": 114,
+      "TrainLabelsUnavailable": 501,
+      "ValidationLabelsUnavailableAtRefit": 0
+    },
+    {
+      "Hotel": "H1",
+      "Fold": 4,
+      "FitDate": "2017-01-01T00:00:00",
+      "ValidationEnd": "2017-03-01T00:00:00",
+      "TrainCandidates": 13944,
+      "TrainRows": 13631,
+      "TrainPositives": 1055,
+      "ValidationRows": 1252,
+      "ValidationPositives": 119,
+      "TrainLabelsUnavailable": 313,
+      "ValidationLabelsUnavailableAtRefit": 0
+    }
+  ],
+  "partition_summary": [
+    {
+      "Hotel": "H1",
+      "Cohort": "Development",
+      "Rows": 16564,
+      "Positives": 1269
+    },
+    {
+      "Hotel": "H1",
+      "Cohort": "Final refit eligible",
+      "Rows": 16019,
+      "Positives": 1250
+    },
+    {
+      "Hotel": "H1",
+      "Cohort": "Final refit excluded",
+      "Rows": 545,
+      "Positives": 19
+    },
+    {
+      "Hotel": "H1",
+      "Cohort": "Calibration",
+      "Rows": 6119,
+      "Positives": 460
+    },
+    {
+      "Hotel": "H1",
+      "Cohort": "Test",
+      "Rows": 3576,
+      "Positives": 249
+    }
+  ],
+  "checks": [
+    {
+      "Hotel": "H1",
+      "Check": "Partition covers input once",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Development membership",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Test membership",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Membership hotel keys match the selected hotel",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Source and config unchanged",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: eligible train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: complete validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: train and validation disjoint",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: eligibility candidates",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: eligibility agrees with train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: nonempty train and validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: correct fit date",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 1: validation labels ready before refit",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: eligible train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: complete validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: train and validation disjoint",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: eligibility candidates",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: eligibility agrees with train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: nonempty train and validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: correct fit date",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 2: validation labels ready before refit",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: eligible train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: complete validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: train and validation disjoint",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: eligibility candidates",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: eligibility agrees with train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: nonempty train and validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: correct fit date",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 3: validation labels ready before refit",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: eligible train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: complete validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: train and validation disjoint",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: eligibility candidates",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: eligibility agrees with train",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: nonempty train and validation",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: correct fit date",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Fold 4: validation labels ready before refit",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Final refit uses every eligible development row",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Final refit rechecks the complete development cohort",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Final eligibility agrees with refit membership",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Final refit date and nullable fold",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Recorded label availability matches the agreed proxy",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Exclusion reasons match eligibility",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Calibration is the unique union of validation rows",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Calibration keeps the validation fold",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Calibration prediction dates equal CutoffDate",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "CV summaries reconcile with source filters",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "CV counts match the current Gold EDA",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Partition summaries reconcile with memberships",
+      "Passed": true,
+      "Sample IDs": ""
+    },
+    {
+      "Hotel": "H1",
+      "Check": "Partition counts match the current Gold EDA",
+      "Passed": true,
+      "Sample IDs": ""
+    }
+  ]
+}

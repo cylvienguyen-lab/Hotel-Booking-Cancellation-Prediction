@@ -1,0 +1,208 @@
+{
+  "run_id": "rolling_12m_v1",
+  "split_id": "split_v1",
+  "models": {
+    "random_forest": {
+      "n_estimators": 300,
+      "max_depth": null,
+      "min_samples_leaf": 20,
+      "max_features": "sqrt",
+      "criterion": "gini",
+      "bootstrap": true,
+      "class_weight": null,
+      "random_state": 42,
+      "n_jobs": 2
+    },
+    "xgboost": {
+      "n_estimators": 300,
+      "learning_rate": 0.05,
+      "max_depth": 3,
+      "min_child_weight": 5,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "reg_lambda": 1,
+      "scale_pos_weight": 1,
+      "objective": "binary:logistic",
+      "eval_metric": "logloss",
+      "tree_method": "hist",
+      "device": "cpu",
+      "random_state": 42,
+      "n_jobs": 2,
+      "early_stopping_rounds": null
+    }
+  },
+  "feature_set": "core_no_year_month_week",
+  "feature_config": {
+    "numeric": [
+      "LeadTime",
+      "ArrivalDateDayOfMonth",
+      "StaysInWeekendNights",
+      "StaysInWeekNights",
+      "Adults",
+      "Children",
+      "Babies",
+      "ArrivalDayOfWeek",
+      "TotalNights",
+      "PartySize",
+      "EURUSD"
+    ],
+    "binary": [
+      "IsRepeatedGuest",
+      "IsPortugalHoliday"
+    ],
+    "categorical": [
+      "Meal",
+      "MarketSegment",
+      "DistributionChannel",
+      "ReservedRoomType",
+      "CustomerType"
+    ]
+  },
+  "training_history": {
+    "strategy": "rolling",
+    "lookback_months": 12,
+    "rule": "FitDate - 12 calendar months <= CutoffDate < FitDate and LabelAvailableDate < FitDate"
+  },
+  "preprocessing": {
+    "numeric_scaling": false,
+    "numeric_imputation": "median",
+    "binary_imputation": "most_frequent",
+    "categorical_imputation": "__MISSING__",
+    "categorical_encoding": "one_hot",
+    "handle_unknown": "ignore"
+  },
+  "evaluation": {
+    "primary_metric": "LogLoss",
+    "primary_direction": "minimize",
+    "metrics": [
+      "LogLoss",
+      "BrierScore",
+      "ROC_AUC",
+      "AveragePrecision"
+    ],
+    "cv_aggregation": "equal_weight_mean_of_validation_windows"
+  },
+  "environment": {
+    "python": "3.12.15",
+    "numpy": "2.2.2",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.6.1",
+    "xgboost": "3.0.5"
+  },
+  "references": {
+    "rf_initial_v1": "49ff3d8255a10c2d50dfe05e5cb7cfefe401543db7c8486ab9c3c53237ec2edd",
+    "xgb_initial_v1": "1741543c0808579b8156be346c58f88471f9c557ba3460b72d2a848949544808"
+  },
+  "split_config_sha256": "487fb3ff3417cfae339eef3adce44ec52a02d5d3b6bf7caeb5c66ef65b012e40",
+  "cv_membership_sha256": {
+    "H1": "a0ac9a56779a61b7316c794979f00b77bfa2a5f7367f3a9bf9cf2618c0b1b771",
+    "H2": "8cc7c68ad028b17bfa9af7b6ae9b5fd8fcf5e731ece7ea67e6fdd75cd61cb5f7"
+  },
+  "code_sha256": {
+    "utils/model_pipeline.py": "4f1ca07d3c81231f449501683756f5bf20a2e6d331fde9a63ef2b92edaeaf697",
+    "utils/model_evaluation.py": "d65dd06fd874d5ae04419a8954492fdeeae0adcbd931a37e2f636bfe12162110"
+  },
+  "replay_absolute_tolerance": 1e-12,
+  "output_schema": {
+    "H1/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "InputColumns": "int64",
+        "ProcessedColumns": "int64",
+        "Trees": "float64",
+        "MaxTreeDepth": "int64",
+        "TrainWindowStart": "datetime64[ns]",
+        "HistoryRemovedRows": "int64",
+        "HistoryRemovedPositives": "int64",
+        "BoostingRounds": "float64"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd",
+        "TrainWindowStart"
+      ]
+    },
+    "H1/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int32",
+        "RawProbability": "float64"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    },
+    "H2/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "InputColumns": "int64",
+        "ProcessedColumns": "int64",
+        "Trees": "float64",
+        "MaxTreeDepth": "int64",
+        "TrainWindowStart": "datetime64[ns]",
+        "HistoryRemovedRows": "int64",
+        "HistoryRemovedPositives": "int64",
+        "BoostingRounds": "float64"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd",
+        "TrainWindowStart"
+      ]
+    },
+    "H2/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int32",
+        "RawProbability": "float64"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    }
+  }
+}

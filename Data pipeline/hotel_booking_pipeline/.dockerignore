@@ -1,0 +1,9 @@
+data/
+datamart/
+README.ipynb
+EDA/
+diagrams/
+.git/
+.venv/
+**/__pycache__/
+**/.ipynb_checkpoints/

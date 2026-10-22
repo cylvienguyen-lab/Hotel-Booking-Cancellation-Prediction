@@ -1,0 +1,21 @@
+# Python and editor state
+.venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Data is never committed: Gold, raw/external tables, splits and reports
+Data pipeline/hotel_booking_pipeline/datamart/
+Data pipeline/hotel_booking_pipeline/data/raw/*.csv
+*.parquet
+*.csv
+*.xlsx
+
+# Pipeline outputs are tracked by DVC, not git
+Model pipeline/artifacts/
+Model pipeline/models/
+*.pkl
+*.joblib

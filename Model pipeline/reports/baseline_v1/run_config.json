@@ -1,0 +1,156 @@
+{
+  "run_id": "baseline_v1",
+  "split_id": "split_v1",
+  "feature_set": "core",
+  "feature_config": {
+    "numeric": [
+      "LeadTime",
+      "ArrivalDateYear",
+      "ArrivalDateWeekNumber",
+      "ArrivalDateDayOfMonth",
+      "StaysInWeekendNights",
+      "StaysInWeekNights",
+      "Adults",
+      "Children",
+      "Babies",
+      "ArrivalDayOfWeek",
+      "TotalNights",
+      "PartySize",
+      "EURUSD"
+    ],
+    "binary": [
+      "IsRepeatedGuest",
+      "IsPortugalHoliday"
+    ],
+    "categorical": [
+      "ArrivalDateMonth",
+      "Meal",
+      "MarketSegment",
+      "DistributionChannel",
+      "ReservedRoomType",
+      "CustomerType"
+    ]
+  },
+  "model_params": {
+    "dummy": {
+      "strategy": "prior"
+    },
+    "logistic_regression": {
+      "penalty": "l2",
+      "C": 1.0,
+      "solver": "lbfgs",
+      "fit_intercept": true,
+      "class_weight": null,
+      "max_iter": 1000,
+      "tol": 0.0001
+    }
+  },
+  "evaluation": {
+    "primary_metric": "LogLoss",
+    "primary_direction": "minimize",
+    "metrics": [
+      "LogLoss",
+      "BrierScore",
+      "ROC_AUC",
+      "AveragePrecision"
+    ],
+    "cv_aggregation": "equal_weight_mean_of_validation_windows"
+  },
+  "environment": {
+    "python": "3.12.15",
+    "numpy": "2.2.2",
+    "pandas": "2.2.3",
+    "scikit_learn": "1.6.1"
+  },
+  "split_config_sha256": "487fb3ff3417cfae339eef3adce44ec52a02d5d3b6bf7caeb5c66ef65b012e40",
+  "code_sha256": {
+    "utils/model_pipeline.py": "e4c2588d717d1aa2cd9d2dbaf7c74765ddb67ceb8ebc450acc02cd479a043a35",
+    "utils/model_evaluation.py": "d65dd06fd874d5ae04419a8954492fdeeae0adcbd931a37e2f636bfe12162110"
+  },
+  "output_schema": {
+    "H1/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "ProcessedColumns": "int64",
+        "Iterations": "int64",
+        "Converged": "bool"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd"
+      ]
+    },
+    "H1/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int32",
+        "RawProbability": "float64"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    },
+    "H2/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "ProcessedColumns": "int64",
+        "Iterations": "int64",
+        "Converged": "bool"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd"
+      ]
+    },
+    "H2/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int32",
+        "RawProbability": "float64"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    }
+  }
+}

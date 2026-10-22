@@ -1,0 +1,165 @@
+{
+  "run_id": "rf17_error_analysis_v1",
+  "reference_feature_set": "F1",
+  "evaluation_folds": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "model_params": {
+    "H1": {
+      "n_estimators": 300,
+      "max_depth": null,
+      "min_samples_leaf": 20,
+      "max_features": "sqrt",
+      "criterion": "gini",
+      "bootstrap": true,
+      "class_weight": null,
+      "random_state": 42,
+      "n_jobs": 2
+    },
+    "H2": {
+      "n_estimators": 300,
+      "max_depth": 6,
+      "min_samples_leaf": 50,
+      "max_features": "sqrt",
+      "criterion": "gini",
+      "bootstrap": true,
+      "class_weight": null,
+      "random_state": 42,
+      "n_jobs": 2
+    }
+  },
+  "feature_config": {
+    "numeric": [
+      "LeadTime",
+      "ArrivalDateDayOfMonth",
+      "StaysInWeekendNights",
+      "StaysInWeekNights",
+      "Adults",
+      "Children",
+      "Babies",
+      "ArrivalDayOfWeek",
+      "TotalNights",
+      "PartySize"
+    ],
+    "binary": [
+      "IsRepeatedGuest",
+      "IsPortugalHoliday"
+    ],
+    "categorical": [
+      "Meal",
+      "MarketSegment",
+      "DistributionChannel",
+      "ReservedRoomType",
+      "CustomerType"
+    ]
+  },
+  "source_sha256": {
+    "Model pipeline/splits/split_v1/config.json": "487fb3ff3417cfae339eef3adce44ec52a02d5d3b6bf7caeb5c66ef65b012e40",
+    "Model pipeline/splits/split_v1/H1/cv_membership.csv": "a0ac9a56779a61b7316c794979f00b77bfa2a5f7367f3a9bf9cf2618c0b1b771",
+    "Model pipeline/splits/split_v1/H2/cv_membership.csv": "8cc7c68ad028b17bfa9af7b6ae9b5fd8fcf5e731ece7ea67e6fdd75cd61cb5f7",
+    "Model pipeline/reports/feature_ablation_round1_v1/H1/oof_predictions.csv": "c6465d366f5dfce92118e456134d510b254cb47c0bc93a3cbb0751a880cfe960",
+    "Model pipeline/reports/feature_ablation_round1_v1/H1/fold_metrics.csv": "af21cd279f97052f8dddefdba69dfea0e7dac5076a88866121fff66061a1d66f",
+    "Model pipeline/reports/baseline_v1/H1/oof_predictions.csv": "6a5589325de47c3ac838cc3dcf8aba62404e13e50fa9b45eee5a39f6cd086675",
+    "Model pipeline/reports/feature_ablation_round1_v1/H2/oof_predictions.csv": "09329d221b9338e7e9d861010545e938830aefd5a2fa2b0a4a21ddd2faf46b94",
+    "Model pipeline/reports/feature_ablation_round1_v1/H2/fold_metrics.csv": "19b4d4878e8365e6388a75a3b1577496cf86c5d127a8586246e6593e494263ba",
+    "Model pipeline/reports/baseline_v1/H2/oof_predictions.csv": "da9ded8505d725e9a46ff2fc3307a04621376b8f7e9ca7e4e13b08d8c6cafdf8"
+  },
+  "gold_metadata_sha256": {
+    "H1": "e8df0a0a38ec7fbf2a3fe3be306e7b5c1d0806c701f003436d2a3d1b4afe32ac",
+    "H2": "16c20a8dd7cd28c0a42fe6a8a261008938bc990cb7e58fd0db3707d9e2e4aa25"
+  },
+  "reference_config_sha256": "2666ecfb4677f6a6d5e69d7900182d4e3a18ae0d865695e235c71d8bae4ce82e",
+  "split_config": {
+    "split_column": "CutoffDate",
+    "first_fit_date": "2016-07-01",
+    "validation_months": 2,
+    "n_folds": 4,
+    "test_start": "2017-04-18",
+    "test_end": "2017-08-18"
+  },
+  "lead_time_inner_edges": {
+    "H1": [
+      37.0,
+      78.0,
+      153.0
+    ],
+    "H2": [
+      34.0,
+      65.0,
+      112.0
+    ]
+  },
+  "tail_rule": "loss >= hotel/outcome-class 90th percentile; inspection only; ties retained",
+  "group_contribution": "(group total RF loss - group total Dummy loss) / full window rows; CV mean over four windows",
+  "persistent_focus": [
+    {
+      "Hotel": "H2",
+      "Dimension": "MarketSegment",
+      "Group": "Corporate"
+    }
+  ],
+  "changing_focus": {
+    "Hotel": "H2",
+    "LeadTimeBand": "G4",
+    "MarketSegment": "Groups",
+    "SelectedFromFold": 3
+  },
+  "code_sha256": "a2fcf30aafb7b62af19a78690997ec0160830872156f4e5f7a417677636b0f83",
+  "output_schema": {
+    "booking_errors.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int64",
+        "RawProbability": "float64",
+        "FeatureSet": "object",
+        "ReferenceConfigID": "object",
+        "RawProbability_dummy": "float64",
+        "CutoffDate": "datetime64[ns]",
+        "LeadTime": "int32",
+        "CustomerType": "object",
+        "MarketSegment": "object",
+        "LeadTimeBand": "object",
+        "IndividualLogLoss": "float64",
+        "DummyIndividualLogLoss": "float64",
+        "ExcessLogLoss": "float64",
+        "HighLossWithinClass": "bool"
+      },
+      "date_columns": [
+        "PredictionDate",
+        "CutoffDate"
+      ]
+    },
+    "group_errors.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Fold": "int64",
+        "Dimension": "object",
+        "Group": "object",
+        "Rows": "int64",
+        "Positives": "int64",
+        "MeanProbability": "float64",
+        "LogLoss": "float64",
+        "DummyLogLoss": "float64",
+        "TotalLoss": "float64",
+        "TotalExcessLoss": "float64",
+        "CancelRate": "float64",
+        "ProbabilityBias": "float64",
+        "ExcessLogLoss": "float64",
+        "Rows_window": "int64",
+        "CVExcessContribution": "float64"
+      },
+      "date_columns": []
+    }
+  },
+  "output_sha256": {
+    "booking_errors.csv": "7cfa213f57c9ebb0cc445f73ad46f7a18314c8cce71340f11050146b87959cb6",
+    "group_errors.csv": "c0d6331261e9b62522b43d10ccded82663359d50a8f6ba8565fc263eef88a3e4"
+  }
+}

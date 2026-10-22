@@ -1,0 +1,16 @@
+services:
+  model-jupyter:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8889:8889"
+    volumes:
+      - type: bind
+        source: .
+        target: "/workspace/Project/Model pipeline"
+      - type: bind
+        source: "../Data pipeline"
+        target: "/workspace/Project/Data pipeline"
+        read_only: true
+    working_dir: "/workspace/Project/Model pipeline"

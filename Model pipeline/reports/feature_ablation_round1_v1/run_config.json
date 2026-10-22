@@ -1,0 +1,485 @@
+{
+  "protocol": {
+    "run_id": "feature_ablation_round1_v1",
+    "model": "random_forest",
+    "reference_run": "tuning_round1_v1",
+    "reference_config_ids": {
+      "H1": "rf18_07",
+      "H2": "rf18_02"
+    },
+    "model_params": {
+      "H1": {
+        "n_estimators": 300,
+        "max_depth": null,
+        "min_samples_leaf": 20,
+        "max_features": "sqrt",
+        "criterion": "gini",
+        "bootstrap": true,
+        "class_weight": null,
+        "random_state": 42,
+        "n_jobs": 2
+      },
+      "H2": {
+        "n_estimators": 300,
+        "max_depth": 6,
+        "min_samples_leaf": 50,
+        "max_features": "sqrt",
+        "criterion": "gini",
+        "bootstrap": true,
+        "class_weight": null,
+        "random_state": 42,
+        "n_jobs": 2
+      }
+    },
+    "feature_sets": {
+      "F0": {
+        "numeric": [
+          "LeadTime",
+          "ArrivalDateDayOfMonth",
+          "StaysInWeekendNights",
+          "StaysInWeekNights",
+          "Adults",
+          "Children",
+          "Babies",
+          "ArrivalDayOfWeek",
+          "TotalNights",
+          "PartySize",
+          "EURUSD"
+        ],
+        "binary": [
+          "IsRepeatedGuest",
+          "IsPortugalHoliday"
+        ],
+        "categorical": [
+          "Meal",
+          "MarketSegment",
+          "DistributionChannel",
+          "ReservedRoomType",
+          "CustomerType"
+        ]
+      },
+      "F1": {
+        "numeric": [
+          "LeadTime",
+          "ArrivalDateDayOfMonth",
+          "StaysInWeekendNights",
+          "StaysInWeekNights",
+          "Adults",
+          "Children",
+          "Babies",
+          "ArrivalDayOfWeek",
+          "TotalNights",
+          "PartySize"
+        ],
+        "binary": [
+          "IsRepeatedGuest",
+          "IsPortugalHoliday"
+        ],
+        "categorical": [
+          "Meal",
+          "MarketSegment",
+          "DistributionChannel",
+          "ReservedRoomType",
+          "CustomerType"
+        ]
+      },
+      "F2": {
+        "numeric": [
+          "ArrivalDateDayOfMonth",
+          "StaysInWeekendNights",
+          "StaysInWeekNights",
+          "Adults",
+          "Children",
+          "Babies",
+          "ArrivalDayOfWeek",
+          "TotalNights",
+          "PartySize",
+          "EURUSD"
+        ],
+        "binary": [
+          "IsRepeatedGuest",
+          "IsPortugalHoliday"
+        ],
+        "categorical": [
+          "Meal",
+          "MarketSegment",
+          "DistributionChannel",
+          "ReservedRoomType",
+          "CustomerType"
+        ]
+      },
+      "F3": {
+        "numeric": [
+          "ArrivalDateDayOfMonth",
+          "StaysInWeekendNights",
+          "StaysInWeekNights",
+          "Adults",
+          "Children",
+          "Babies",
+          "ArrivalDayOfWeek",
+          "TotalNights",
+          "PartySize"
+        ],
+        "binary": [
+          "IsRepeatedGuest",
+          "IsPortugalHoliday"
+        ],
+        "categorical": [
+          "Meal",
+          "MarketSegment",
+          "DistributionChannel",
+          "ReservedRoomType",
+          "CustomerType"
+        ]
+      }
+    },
+    "removed_features": {
+      "F0": [],
+      "F1": [
+        "EURUSD"
+      ],
+      "F2": [
+        "LeadTime"
+      ],
+      "F3": [
+        "EURUSD",
+        "LeadTime"
+      ]
+    },
+    "split_id": "split_v1",
+    "split_config": {
+      "split_column": "CutoffDate",
+      "first_fit_date": "2016-07-01",
+      "validation_months": 2,
+      "n_folds": 4,
+      "test_start": "2017-04-18",
+      "test_end": "2017-08-18"
+    },
+    "evaluation": {
+      "primary_metric": "LogLoss",
+      "primary_direction": "minimize",
+      "metrics": [
+        "LogLoss",
+        "BrierScore",
+        "ROC_AUC",
+        "AveragePrecision"
+      ],
+      "cv_aggregation": "equal_weight_mean_of_validation_windows"
+    },
+    "environment": {
+      "python": "3.12.15",
+      "numpy": "2.2.2",
+      "pandas": "2.2.3",
+      "scikit_learn": "1.6.1",
+      "scipy": "1.15.1",
+      "xgboost": "3.0.5",
+      "xgboost_distribution": "xgboost-cpu"
+    },
+    "input_cohort_sha256": {
+      "H1/fold_1/Train": "567efafed25b97e9ea74f64b740db5b910f03b07032cb5c844402993acd6591f",
+      "H1/fold_1/Validation": "ea2f99dc661a8257144fb81119e28e01b2daa01f16abd741edc4ac99e3a78222",
+      "H1/fold_2/Train": "8a98bbf7fc0c8f4e01486593690030e9f54ded4d0ec9314a7eec38cb8152ec4c",
+      "H1/fold_2/Validation": "f43f569289868a8e228f68ca10170fde221cec45601873a222977ab40eb10671",
+      "H1/fold_3/Train": "38599e3f961a5822b95d40b05ccf43865b80a1b34a65d84d4caa765e0e607c8c",
+      "H1/fold_3/Validation": "d5da82c34c7e37d4ba9c4b6e4139fa62ba9a5da3e3adcc24064a17f83c17f0e7",
+      "H1/fold_4/Train": "38c39f6ccf5074300fc70f2533bebbd5294605c2a7b0fa953815e10fe5bc55bc",
+      "H1/fold_4/Validation": "2fbad6c1fd4d7280c72042e2896c00a9952ec8ad10b4787eb051559b7d590112",
+      "H2/fold_1/Train": "be95ec26816ec8cde91fd32ccb956032a9183d8b50567f33599c24ee5d7ae958",
+      "H2/fold_1/Validation": "c411dc457d454a6e8918f5214f7f9ed001b5dd88e9213a420c785674e4af6a82",
+      "H2/fold_2/Train": "3a592581516971c89a274d11d37f3714fe5400ffbc3bb65f049e285305e40408",
+      "H2/fold_2/Validation": "27dffb24437c66d4f6fc341137d56ce4ab1e847f762221dc5bed852a6ad053ea",
+      "H2/fold_3/Train": "0230a712bc7b55754efeb470797c63b605a7057d0b7dc89442cb6a0874bf66d8",
+      "H2/fold_3/Validation": "47ed0cb3b01bc5fc52944546b3879c75abada661c73b2f4454f4a4c018f3f3c2",
+      "H2/fold_4/Train": "f2f2b63ae4022ceed903d652b265d25a4ac74b6a286103e849bf12cd88b85117",
+      "H2/fold_4/Validation": "758bc5852a088a1b11b1edd7ba515df759607a965b5e4965b9adc8cd1b190d4c"
+    },
+    "expected_evaluations": 32,
+    "expected_reference_reuses": 8,
+    "expected_new_fits": 24,
+    "reference_config_sha256": "0a364c8444e984362758e95b88f91edc221cf8f0b4a3e5ec14beff36ed341144",
+    "reference_outputs_sha256": {
+      "H1/fold_metrics.csv": "cdecea24d10b003643ec94a42e554107b083b4d6e36181775ae4ddf2624ea292",
+      "H1/oof_predictions.csv": "a1686e13f3979c10974ba2755f54d2060b981cf9fd164c4a5e1d1ef736e7690f",
+      "H1/cv_summary.csv": "8db4d0c060f3cd25ffe421cce888ff4b79f9498414589748dd8856892d34b28f",
+      "H1/experiment_log.csv": "f473b3ab29971a1ff96d5c983d89732e06b0feeb87b04e4d516505c19bb03362",
+      "H2/fold_metrics.csv": "0489d41e35352c8a0c15243ec58e38d70928d62514e384bba3d8910d6776ede9",
+      "H2/oof_predictions.csv": "d270fe29734f352c830eb9107ce1d4287f87293a335ba156dadb7ac0378d3535",
+      "H2/cv_summary.csv": "0d994e2a418161f921e0bc0560173d7c53c6faf59d5e299dd0177ffb247cbc09",
+      "H2/experiment_log.csv": "d83144113bc939fe1ace359cabed8a62387820c0fa42840858e032ba4952f11c"
+    },
+    "source_sha256": {
+      "Model pipeline/splits/split_v1/config.json": "487fb3ff3417cfae339eef3adce44ec52a02d5d3b6bf7caeb5c66ef65b012e40",
+      "Model pipeline/splits/split_v1/H1/cv_membership.csv": "a0ac9a56779a61b7316c794979f00b77bfa2a5f7367f3a9bf9cf2618c0b1b771",
+      "Model pipeline/splits/split_v1/H1/fit_eligibility.csv": "6f069ed68b05a89abd0c78566dc2dfc01f7882efe640ddafebfc9f1175956d5e",
+      "Model pipeline/splits/split_v1/H1/calibration_membership.csv": "82a5ffd71aba41d2bd69f7192da3a18bf8499727d6840ed4ffa2c16f6c497673",
+      "Model pipeline/splits/split_v1/H2/cv_membership.csv": "8cc7c68ad028b17bfa9af7b6ae9b5fd8fcf5e731ece7ea67e6fdd75cd61cb5f7",
+      "Model pipeline/splits/split_v1/H2/fit_eligibility.csv": "8ab9ac9d6907958ae05884179e0088294335d1b7dd56d41b1ae80c973a07450d",
+      "Model pipeline/splits/split_v1/H2/calibration_membership.csv": "6906302648616039d11f2a1d4d9e2089165e4b74cf3bce2611d7c2767439aa0a",
+      "Model pipeline/reports/baseline_v1/run_config.json": "92a8813719855e4aca91c0fd899a4e1efb5bbdcae29ddd4b33ce1e532527b105",
+      "Model pipeline/reports/baseline_v1/H1/fold_metrics.csv": "2e33099f552891983dac9f5937a2587ad514457ced2ef4bae95315da725874bc",
+      "Model pipeline/reports/baseline_v1/H1/oof_predictions.csv": "6a5589325de47c3ac838cc3dcf8aba62404e13e50fa9b45eee5a39f6cd086675",
+      "Model pipeline/reports/baseline_v1/H2/fold_metrics.csv": "ef93f25a7bd51e05fbf5497a0a93cc7811ba10609a3feddf960b71768129a174",
+      "Model pipeline/reports/baseline_v1/H2/oof_predictions.csv": "da9ded8505d725e9a46ff2fc3307a04621376b8f7e9ca7e4e13b08d8c6cafdf8",
+      "Model pipeline/reports/lr_calendar_ablation_v1/run_config.json": "fc6af7dd386dbe7b870aab3fd20e9344b304e4d7b3abfcdcac24b6081028ce23",
+      "Model pipeline/reports/lr_calendar_ablation_v1/H1/fold_metrics.csv": "e0bc6a13bfe250a1b773348038d630d5c82b38a369cce29f26e7838c511047e5",
+      "Model pipeline/reports/lr_calendar_ablation_v1/H1/oof_predictions.csv": "171013aae53d8b1be2fa8f5503932c9b6d3474a7c684464663352c9369c20f67",
+      "Model pipeline/reports/lr_calendar_ablation_v1/H2/fold_metrics.csv": "b93ffe3429f69807340ff69f4e664aa4277f81f7d3c5be39b1412dd39d7ef214",
+      "Model pipeline/reports/lr_calendar_ablation_v1/H2/oof_predictions.csv": "7e88f0ff69994a4f0a2986150b6fb59f552db672fe40f440d3cec8d6ca10331b",
+      "Model pipeline/reports/rf_initial_v1/run_config.json": "49ff3d8255a10c2d50dfe05e5cb7cfefe401543db7c8486ab9c3c53237ec2edd",
+      "Model pipeline/reports/rf_initial_v1/H1/fold_metrics.csv": "97d9c1a2d7d8c52d554f7e4604f3814f8739ab987bd5117ad62e4378eb4ee109",
+      "Model pipeline/reports/rf_initial_v1/H1/oof_predictions.csv": "2b3475da2b29ead9f542b4552233d497a45a673790d0750e2f24bed0e2a30436",
+      "Model pipeline/reports/rf_initial_v1/H2/fold_metrics.csv": "d6e35d5c028b526ffa326372eb124410cb823545d67c50a29ab91002958f7aa9",
+      "Model pipeline/reports/rf_initial_v1/H2/oof_predictions.csv": "3b173d767380335bebeb240acee502e742fb184e28fdb2e71147244b38b66278",
+      "Model pipeline/reports/xgb_initial_v1/run_config.json": "1741543c0808579b8156be346c58f88471f9c557ba3460b72d2a848949544808",
+      "Model pipeline/reports/xgb_initial_v1/H1/fold_metrics.csv": "465467d3218667042436f3175d979cbd881d53fd72b545ad080454bc0d488992",
+      "Model pipeline/reports/xgb_initial_v1/H1/oof_predictions.csv": "6504c138ba7507fc8f7fa4b3bb25896f510d4c8a0f4dec5632b754f7895174e3",
+      "Model pipeline/reports/xgb_initial_v1/H2/fold_metrics.csv": "c616c0f3f6e8eea0644710b4efbf4e8dc2991edd749147b3f1a5f52dd1d39cd1",
+      "Model pipeline/reports/xgb_initial_v1/H2/oof_predictions.csv": "e74a4ab73e0c9d1396497823cbf45ee285942c4a2f2c7bd206e83f7476c36fe8"
+    },
+    "code_sha256": {
+      "utils/model_pipeline.py": "4f1ca07d3c81231f449501683756f5bf20a2e6d331fde9a63ef2b92edaeaf697",
+      "utils/model_evaluation.py": "d65dd06fd874d5ae04419a8954492fdeeae0adcbd931a37e2f636bfe12162110",
+      "utils/model_split.py": "c585318f7cc5a2dc5ad0a780615fbafed1888a681896ff25d02db6ec1e6bcfa8"
+    },
+    "fitting_functions_sha256": "f0ce8525f0b77b027d9f23bbdb8536941b8f1434fe16230fb0f2ca3e559e2f21",
+    "aggregation_sha256": "6305238b08ad1e4c18e0827c5caebb93a51fc2b8df71d3232169b148bfe345ea",
+    "replay_absolute_tolerance": 1e-12
+  },
+  "execution_notebook_code_sha256": "07ca8b58a6d76cc0f6c24c938837de9ac126ea844d71bfaf7ab53967e2f7bb81",
+  "output_schema": {
+    "H1/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "InputColumns": "int64",
+        "ProcessedColumns": "int64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "TrainLogLoss": "float64",
+        "TrainBrierScore": "float64",
+        "TrainROC_AUC": "float64",
+        "TrainAveragePrecision": "float64",
+        "FeatureSet": "object",
+        "ReferenceConfigID": "object",
+        "Source": "object",
+        "F0LogLoss": "float64",
+        "DummyLogLoss": "float64",
+        "GainVsF0": "float64",
+        "GainVsDummy": "float64",
+        "MeanProbability": "float64",
+        "ProbabilityBias": "float64",
+        "GeneralizationGap": "float64"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd"
+      ]
+    },
+    "H1/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int64",
+        "RawProbability": "float64",
+        "FeatureSet": "object",
+        "ReferenceConfigID": "object"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    },
+    "H1/cv_summary.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "FeatureSet": "object",
+        "Removed": "object",
+        "ReferenceConfigID": "object",
+        "InputColumns": "int64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "F0LogLoss": "float64",
+        "DummyLogLoss": "float64",
+        "GainVsF0": "float64",
+        "GainVsDummy": "float64",
+        "FoldsBeatingF0": "int64",
+        "FoldsBeatingDummy": "int64",
+        "MeanTrainLogLoss": "float64",
+        "MeanGap": "float64",
+        "MeanProbabilityBias": "float64",
+        "MeanAbsoluteWindowBias": "float64",
+        "LogLossSD": "float64",
+        "WorstFold": "int64",
+        "WorstLogLoss": "float64",
+        "WorstExcessVsDummy": "float64",
+        "PooledOOFLogLoss": "float64",
+        "Rank": "int64"
+      },
+      "date_columns": []
+    },
+    "H1/experiment_log.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "ReferenceConfigID": "object",
+        "Source": "object",
+        "Status": "object",
+        "StartedUTC": "object",
+        "FinishedUTC": "object",
+        "EvaluationSeconds": "float64",
+        "ChecksPassed": "int64",
+        "ParameterSHA256": "object",
+        "FeatureConfigSHA256": "object",
+        "TrainInputSHA256": "object",
+        "ValidationInputSHA256": "object",
+        "FittedStateSHA256": "object",
+        "ObservedTreeDepth": "int64",
+        "ProcessedColumns": "int64",
+        "EffectiveMaxFeatures": "int64"
+      },
+      "date_columns": []
+    },
+    "H2/fold_metrics.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "FitDate": "datetime64[ns]",
+        "ValidationStart": "datetime64[ns]",
+        "ValidationEnd": "datetime64[ns]",
+        "TrainRows": "int64",
+        "TrainPositives": "int64",
+        "TrainCancelRate": "float64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "ValidationCancelRate": "float64",
+        "InputColumns": "int64",
+        "ProcessedColumns": "int64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "TrainLogLoss": "float64",
+        "TrainBrierScore": "float64",
+        "TrainROC_AUC": "float64",
+        "TrainAveragePrecision": "float64",
+        "FeatureSet": "object",
+        "ReferenceConfigID": "object",
+        "Source": "object",
+        "F0LogLoss": "float64",
+        "DummyLogLoss": "float64",
+        "GainVsF0": "float64",
+        "GainVsDummy": "float64",
+        "MeanProbability": "float64",
+        "ProbabilityBias": "float64",
+        "GeneralizationGap": "float64"
+      },
+      "date_columns": [
+        "FitDate",
+        "ValidationStart",
+        "ValidationEnd"
+      ]
+    },
+    "H2/oof_predictions.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "Booking_ID": "object",
+        "Model": "object",
+        "Fold": "int64",
+        "PredictionDate": "datetime64[ns]",
+        "IsCanceled": "int64",
+        "RawProbability": "float64",
+        "FeatureSet": "object",
+        "ReferenceConfigID": "object"
+      },
+      "date_columns": [
+        "PredictionDate"
+      ]
+    },
+    "H2/cv_summary.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "FeatureSet": "object",
+        "Removed": "object",
+        "ReferenceConfigID": "object",
+        "InputColumns": "int64",
+        "ValidationRows": "int64",
+        "ValidationPositives": "int64",
+        "LogLoss": "float64",
+        "BrierScore": "float64",
+        "ROC_AUC": "float64",
+        "AveragePrecision": "float64",
+        "F0LogLoss": "float64",
+        "DummyLogLoss": "float64",
+        "GainVsF0": "float64",
+        "GainVsDummy": "float64",
+        "FoldsBeatingF0": "int64",
+        "FoldsBeatingDummy": "int64",
+        "MeanTrainLogLoss": "float64",
+        "MeanGap": "float64",
+        "MeanProbabilityBias": "float64",
+        "MeanAbsoluteWindowBias": "float64",
+        "LogLossSD": "float64",
+        "WorstFold": "int64",
+        "WorstLogLoss": "float64",
+        "WorstExcessVsDummy": "float64",
+        "PooledOOFLogLoss": "float64",
+        "Rank": "int64"
+      },
+      "date_columns": []
+    },
+    "H2/experiment_log.csv": {
+      "dtypes": {
+        "Hotel": "object",
+        "FeatureSet": "object",
+        "Fold": "int64",
+        "ReferenceConfigID": "object",
+        "Source": "object",
+        "Status": "object",
+        "StartedUTC": "object",
+        "FinishedUTC": "object",
+        "EvaluationSeconds": "float64",
+        "ChecksPassed": "int64",
+        "ParameterSHA256": "object",
+        "FeatureConfigSHA256": "object",
+        "TrainInputSHA256": "object",
+        "ValidationInputSHA256": "object",
+        "FittedStateSHA256": "object",
+        "ObservedTreeDepth": "int64",
+        "ProcessedColumns": "int64",
+        "EffectiveMaxFeatures": "int64"
+      },
+      "date_columns": []
+    }
+  },
+  "output_sha256": {
+    "H1/fold_metrics.csv": "af21cd279f97052f8dddefdba69dfea0e7dac5076a88866121fff66061a1d66f",
+    "H1/oof_predictions.csv": "c6465d366f5dfce92118e456134d510b254cb47c0bc93a3cbb0751a880cfe960",
+    "H1/cv_summary.csv": "c4df1826b2250a4952436638c6bd18805b5e8ff1b162a5b0cffef92cb20ea8e5",
+    "H1/experiment_log.csv": "84028671897698b94b22126819c3435f435308ae40ad1befc5ee0f0f8e9dbbb1",
+    "H2/fold_metrics.csv": "19b4d4878e8365e6388a75a3b1577496cf86c5d127a8586246e6593e494263ba",
+    "H2/oof_predictions.csv": "09329d221b9338e7e9d861010545e938830aefd5a2fa2b0a4a21ddd2faf46b94",
+    "H2/cv_summary.csv": "ceb84d6e6fe6b1c0ddf793cb5de8013150ed6a0855844876de3325f6f2483559",
+    "H2/experiment_log.csv": "99b2624656e894cb6a97069a536b1f810a8c813902155646b286ec140a2fbaa3"
+  }
+}

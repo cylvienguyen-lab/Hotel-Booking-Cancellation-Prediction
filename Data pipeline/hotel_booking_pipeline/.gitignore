@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+.env
+spark-warehouse/
+metastore_db/
+derby.log
+datamart/**
+!datamart/**/
+!datamart/**/.gitkeep
+data/raw/*
+!data/raw/README.md
+data/external/*
+!data/external/.gitkeep

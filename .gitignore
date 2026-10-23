@@ -7,9 +7,11 @@ spark-warehouse/
 metastore_db/
 derby.log
 
-# Data is never committed: Gold, raw/external tables, splits and reports
+# Data and generated model artifacts are not committed
 Data pipeline/hotel_booking_pipeline/datamart/
 Data pipeline/hotel_booking_pipeline/data/raw/*.csv
+Model pipeline/splits/
+Model pipeline/experiments/
 *.parquet
 *.csv
 *.xlsx

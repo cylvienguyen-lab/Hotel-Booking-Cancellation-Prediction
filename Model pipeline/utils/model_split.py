@@ -1,194 +1,203 @@
-from numbers import Integral
+"""Feature-independent temporal split and maturity audit."""
 
+import numpy as np
 import pandas as pd
 
 
-def make_splits(hotel_data, split_config):
+def data_split(
+    model_data: pd.DataFrame,
+    label_dates: pd.DataFrame,
+    split_config: dict,
+) -> tuple[pd.DataFrame, dict]:
+    """Classify bookings once and audit complete-stay CV eligibility.
 
-    # Prepare the working data and fold calendar
-    required_columns = [
-        'Hotel', 'Booking_ID', 'CutoffDate', 'ArrivalDate', 'TotalNights',
-        'ReservationStatus', 'ReservationStatusDate', 'IsCanceled',
-    ]
-    missing_columns = set(required_columns) - set(hotel_data.columns)
-    if missing_columns:
-        raise ValueError(f'Missing split inputs: {sorted(missing_columns)}')
-    data = hotel_data[required_columns].copy().reset_index(drop=True)
-    if data.empty or data.isna().any().any():
-        raise ValueError('Split inputs must be nonempty and contain no missing metadata')
-    if data['Hotel'].nunique() != 1 or data['Booking_ID'].duplicated().any():
-        raise ValueError('Pass one hotel with one row per Booking_ID')
-    if not data['ReservationStatus'].isin(['Check-Out', 'Canceled', 'No-Show']).all():
-        raise ValueError('Unknown ReservationStatus prevents label availability calculation')
-    if not data['IsCanceled'].isin([0, 1]).all():
-        raise ValueError('IsCanceled must contain binary observed labels')
-    for column in ('CutoffDate', 'ArrivalDate', 'ReservationStatusDate'):
-        data[column] = pd.to_datetime(data[column], errors='raise').dt.normalize()
-    if data[['CutoffDate', 'ArrivalDate', 'ReservationStatusDate']].isna().any().any():
-        raise ValueError('Split inputs contain missing dates after date conversion')
-    data = data.sort_values(['CutoffDate', 'Booking_ID']).reset_index(drop=True)
+    ``model_data`` contains both hotels; Test rows carry metadata only and have
+    a missing target. ``label_dates`` contains Development outcome dates only.
+    Neither input is modified. Each fit requires a past cutoff, a mature label,
+    and expected checkout strictly before FitDate. This prevents partially
+    observed future stays from adding only early cancellations to training.
 
-    if split_config['split_column'] != 'CutoffDate':
-        raise ValueError('This split specification requires CutoffDate')
-    validation_months = split_config['validation_months']
-    n_folds = split_config['n_folds']
-    for name, value in [('validation_months', validation_months), ('n_folds', n_folds)]:
-        if isinstance(value, bool) or not isinstance(value, Integral) or value < 1:
-            raise ValueError(f'{name} must be a positive integer')
-    first_fit = pd.Timestamp(split_config['first_fit_date']).normalize()
-    test_start = pd.Timestamp(split_config['test_start']).normalize()
-    test_end = pd.Timestamp(split_config['test_end']).normalize()
-    if pd.isna(first_fit) or pd.isna(test_start) or pd.isna(test_end):
-        raise ValueError('Split calendar dates must not be missing')
-    if not first_fit < test_start < test_end:
-        raise ValueError('Require first_fit_date < test_start < test_end')
-    calendar = []
-    for fold in range(1, n_folds + 1):
-        fit_date = first_fit + pd.DateOffset(months=(fold - 1) * validation_months)
-        validation_end = first_fit + pd.DateOffset(months=fold * validation_months)
-        if validation_end > test_start:
-            raise ValueError(f'Fold {fold} validation overlaps the final test')
-        calendar.append({
-            'Fold': fold, 'FitDate': fit_date,
-            'ValidationStart': fit_date, 'ValidationEnd': validation_end,
+    Args:
+        model_data: Gold predictors/target for Development and Test metadata.
+        label_dates: Development outcome timestamps and matching targets.
+        split_config: Fixed history, Test bounds and four fold windows.
+
+    Returns:
+        One-row-per-booking membership and an aggregate split audit dict.
+    """
+    keys = ["Hotel", "Booking_ID"]
+    required_model = keys + ["CutoffDate", "ArrivalDate", "TotalNights", "IsCanceled"]
+    required_labels = keys + ["ReservationStatusDate", "IsCanceled"]
+    for name, frame, required in (
+        ("model_data", model_data, required_model),
+        ("label_dates", label_dates, required_labels),
+    ):
+        missing = set(required) - set(frame.columns)
+        if missing or frame.empty or frame[keys].isna().any().any():
+            raise ValueError(f"{name}: missing columns, rows or keys: {sorted(missing)}")
+        if frame.duplicated(keys).any():
+            raise ValueError(f"{name}: duplicate (Hotel, Booking_ID)")
+
+    start = pd.Timestamp(split_config["history_start"])
+    test_start = pd.Timestamp(split_config["test_start"])
+    test_end = pd.Timestamp(split_config["test_end"])
+    folds = split_config["folds"]
+    if len(folds) != 4 or not start < test_start < test_end:
+        raise ValueError("Expected four ordered folds and valid history/Test bounds")
+
+    data = model_data[required_model].copy()
+    for column in ("CutoffDate", "ArrivalDate"):
+        data[column] = pd.to_datetime(data[column], errors="raise").dt.normalize()
+    if data[["CutoffDate", "ArrivalDate"]].isna().any().any():
+        raise ValueError("Missing cutoff or arrival date")
+    if (data["CutoffDate"] < start).any() or (data["CutoffDate"] >= test_end).any():
+        raise ValueError("Source rows outside specified history/Test calendar")
+    if (data["ArrivalDate"] - data["CutoffDate"]).ne(pd.Timedelta(days=14)).any():
+        raise ValueError("Gold records violate the exact T-14 cutoff contract")
+    if data["TotalNights"].isna().any() or (data["TotalNights"] < 0).any():
+        raise ValueError("Invalid TotalNights")
+
+    data["Partition"] = np.where(data["CutoffDate"] < test_start, "Dev", "Test")
+    development = data["Partition"].eq("Dev")
+    if data.loc[development, "IsCanceled"].isna().any():
+        raise ValueError("Development target is missing")
+    if not data.loc[development, "IsCanceled"].isin([0, 1]).all():
+        raise ValueError("Development target must be binary")
+    if data.loc[~development, "IsCanceled"].notna().any():
+        raise ValueError("Test outcomes must be redacted before splitting")
+
+    dates = label_dates[required_labels].copy()
+    dates["ReservationStatusDate"] = pd.to_datetime(
+        dates["ReservationStatusDate"], errors="raise"
+    ).dt.normalize()
+    if dates["ReservationStatusDate"].isna().any():
+        raise ValueError("Missing Development outcome timestamp")
+    if not dates["IsCanceled"].isin([0, 1]).all():
+        raise ValueError("Label store target must be binary")
+    if len(dates) != int(development.sum()):
+        raise ValueError("Label dates must cover exactly Development")
+
+    # Join only Development labels. Test retains null maturity and no outcome.
+    joined = data.merge(
+        dates, on=keys, how="left", validate="one_to_one", suffixes=("", "_label"),
+    )
+    if len(joined) != len(data) or joined.loc[development, "IsCanceled_label"].isna().any():
+        raise ValueError("Incomplete or changing-grain Development label join")
+    if not joined.loc[development, "IsCanceled"].eq(
+        joined.loc[development, "IsCanceled_label"]
+    ).all():
+        raise ValueError("Model dataset and label store disagree on target")
+    if joined.loc[~development, "IsCanceled_label"].notna().any():
+        raise ValueError("Test label was supplied to the split")
+
+    checkout_date = joined["ArrivalDate"] + pd.to_timedelta(
+        joined["TotalNights"], unit="D"
+    )
+    joined["ExpectedCheckoutDate"] = checkout_date
+    joined["LabelAvailableDate"] = joined["ReservationStatusDate"].where(
+        joined["IsCanceled"].eq(1),
+        pd.concat([joined["ReservationStatusDate"], checkout_date], axis=1).max(axis=1),
+    )
+    joined.loc[~development, "LabelAvailableDate"] = pd.NaT
+    if joined.loc[development, "LabelAvailableDate"].isna().any():
+        raise ValueError("Development label availability is missing")
+    if (joined.loc[development, "LabelAvailableDate"] < joined.loc[development, "CutoffDate"]).any():
+        raise ValueError("Outcome date precedes T-14 cutoff")
+
+    joined["ValFold"] = pd.Series(pd.NA, index=joined.index, dtype="Int64")
+    previous_end = None
+    fold_audit = []
+    for number, fold in enumerate(folds, start=1):
+        fit_date = pd.Timestamp(fold["fit_date"])
+        val_end = pd.Timestamp(fold["val_end"])
+        if fit_date >= val_end or val_end > test_start or (
+            previous_end is not None and fit_date != previous_end
+        ):
+            raise ValueError("Overlapping, unordered or Test-overlapping folds")
+        validation = development & joined["CutoffDate"].ge(fit_date) & joined["CutoffDate"].lt(val_end)
+        if joined.loc[validation, "ValFold"].notna().any():
+            raise ValueError("Validation fold overlap")
+        joined.loc[validation, "ValFold"] = number
+        if joined.loc[validation, "LabelAvailableDate"].ge(test_start).any():
+            raise ValueError(f"Fold {number}: validation label immature at final refit")
+
+        # Recompute eligibility at every fit. A booking with a mature early
+        # cancellation still waits until its planned stay has ended.
+        past = development & joined["CutoffDate"].lt(fit_date)
+        mature = joined["LabelAvailableDate"].lt(fit_date)
+        stay_complete = joined["ExpectedCheckoutDate"].lt(fit_date)
+        train = past & mature & stay_complete
+        hotel_fit_counts = {}
+        for hotel in sorted(joined["Hotel"].unique()):
+            hotel_mask = joined["Hotel"].eq(hotel)
+            hotel_fit_counts[hotel] = {
+                "train_eligible": int((hotel_mask & train).sum()),
+                "excluded_future_cutoff": int((hotel_mask & development & ~past).sum()),
+                "excluded_immature_label": int((hotel_mask & past & ~mature).sum()),
+                "excluded_unfinished_stay": int(
+                    (hotel_mask & past & mature & ~stay_complete).sum()
+                ),
+                "validation": int((hotel_mask & validation).sum()),
+            }
+        fold_audit.append({
+            "fold": number,
+            "fit_date": fit_date.strftime("%Y-%m-%d"),
+            "val_end": val_end.strftime("%Y-%m-%d"),
+            "train_eligible": int(train.sum()),
+            "excluded_future_cutoff": int((development & ~past).sum()),
+            "excluded_immature_label": int((past & ~mature).sum()),
+            "excluded_unfinished_stay": int((past & mature & ~stay_complete).sum()),
+            "validation": int(validation.sum()),
+            "validation_positives": int(joined.loc[validation, "IsCanceled"].sum()),
+            "by_hotel": hotel_fit_counts,
         })
-    if data['CutoffDate'].ge(test_end).any():
-        raise ValueError('Input contains bookings outside the configured test end')
+        previous_end = val_end
 
-    # Calculate label availability dates
-    expected_checkout = data['ArrivalDate'] + pd.to_timedelta(data['TotalNights'], unit='D')
-    later_checkout = pd.concat(
-        [data['ReservationStatusDate'], expected_checkout], axis=1
-    ).max(axis=1, skipna=False)
-    data['LabelAvailableDate'] = data['ReservationStatusDate'].where(
-        ~data['ReservationStatus'].eq('Check-Out'), later_checkout
-    )
+    joined["FinalRefit"] = (
+        development
+        & joined["CutoffDate"].lt(test_start)
+        & joined["LabelAvailableDate"].lt(test_start)
+        & joined["ExpectedCheckoutDate"].lt(test_start)
+    ).astype("int8")
+    membership = joined[
+        keys + ["CutoffDate", "ArrivalDate", "ExpectedCheckoutDate",
+                "LabelAvailableDate", "Partition", "ValFold", "FinalRefit"]
+    ].sort_values(keys).reset_index(drop=True)
+    if membership.duplicated(keys).any() or membership.loc[
+        membership["Partition"].eq("Test"), "ValFold"
+    ].notna().any():
+        raise AssertionError("Membership key or Test/CV separation failed")
 
-    # Assign development and test membership
-    keys = ['Hotel', 'Booking_ID']
-    development = data.loc[data['CutoffDate'].lt(test_start)].copy()
-    test = data.loc[data['CutoffDate'].ge(test_start)].copy()
-    partition_membership = data[keys].copy()
-    partition_membership['Partition'] = data['CutoffDate'].lt(test_start).map(
-        {True: 'Development', False: 'Test'}
-    )
-    cv_parts = []
-    eligibility_parts = []
-    cv_summary_rows = []
-
-    # Build training, validation and eligibility records for each CV fold
-    for window in calendar:
-        fold = window['Fold']
-        fit_date = window['FitDate']
-        candidates = development.loc[development['CutoffDate'].lt(fit_date)]
-        eligible = candidates['LabelAvailableDate'].lt(fit_date)
-        train = candidates.loc[eligible]
-        validation = development.loc[
-            development['CutoffDate'].ge(window['ValidationStart'])
-            & development['CutoffDate'].lt(window['ValidationEnd'])
-        ]
-
-        eligibility = candidates[keys + ['LabelAvailableDate']].copy()
-        eligibility['Stage'] = 'CV'
-        eligibility['Fold'] = fold
-        eligibility['FitDate'] = fit_date
-        eligibility['Eligible'] = eligible
-        eligibility['ExclusionReason'] = eligible.map(
-            {True: '', False: 'Label not available before fit'}
-        )
-        eligibility_parts.append(eligibility)
-        for role, cohort in [('Train', train), ('Validation', validation)]:
-            membership = cohort[keys].copy()
-            membership['Fold'] = fold
-            membership['FitDate'] = fit_date
-            membership['Role'] = role
-            cv_parts.append(membership)
-
-        cv_summary_rows.append({
-            'Hotel': data['Hotel'].iloc[0], 'Fold': fold, 'FitDate': fit_date,
-            'ValidationEnd': window['ValidationEnd'],
-            'TrainCandidates': len(candidates), 'TrainRows': len(train),
-            'TrainPositives': int(train['IsCanceled'].sum()),
-            'ValidationRows': len(validation),
-            'ValidationPositives': int(validation['IsCanceled'].sum()),
-            'TrainLabelsUnavailable': int((~eligible).sum()),
-            'ValidationLabelsUnavailableAtRefit': int(
-                validation['LabelAvailableDate'].ge(test_start).sum()
-            ),
-        })
-    cv_membership = pd.concat(cv_parts, ignore_index=True)
-
-    # Build final-refit membership and eligibility records
-    refit_eligible = development['LabelAvailableDate'].lt(test_start)
-    refit = development.loc[refit_eligible]
-    refit_excluded = development.loc[~refit_eligible]
-    refit_membership = refit[keys].copy()
-    refit_membership['FitDate'] = test_start
-    final_eligibility = development[keys + ['LabelAvailableDate']].copy()
-    final_eligibility['Stage'] = 'FinalRefit'
-    final_eligibility['Fold'] = pd.NA
-    final_eligibility['FitDate'] = test_start
-    final_eligibility['Eligible'] = refit_eligible
-    final_eligibility['ExclusionReason'] = refit_eligible.map(
-        {True: '', False: 'Label not available before fit'}
-    )
-    eligibility_parts.append(final_eligibility)
-    fit_eligibility = pd.concat(eligibility_parts, ignore_index=True)
-    fit_eligibility['Fold'] = fit_eligibility['Fold'].astype('Int64')
-
-    # Build calibration membership from the validation folds
-    calibration_membership = cv_membership.loc[
-        cv_membership['Role'].eq('Validation'), keys + ['Fold']
-    ].merge(data[keys + ['CutoffDate']], on=keys, how='left', validate='many_to_one')
-    calibration_membership = calibration_membership.rename(
-        columns={'CutoffDate': 'PredictionDate'}
-    )
-
-    # Build split audit summaries
-    calibration = data.loc[
-        data['Booking_ID'].isin(calibration_membership['Booking_ID'])
-    ]
-    partition_summary_rows = []
-    for name, cohort in [
-        ('Development', development), ('Final refit eligible', refit),
-        ('Final refit excluded', refit_excluded), ('Calibration', calibration),
-        ('Test', test),
-    ]:
-        partition_summary_rows.append({
-            'Hotel': data['Hotel'].iloc[0], 'Cohort': name,
-            'Rows': len(cohort), 'Positives': int(cohort['IsCanceled'].sum()),
-        })
-    actual_config = dict(split_config)
-    actual_config.update({
-        'hotel': data['Hotel'].iloc[0], 'input_rows': len(data),
-        'development_start': data['CutoffDate'].min().strftime('%Y-%m-%d'),
-        'first_fit_date': first_fit.strftime('%Y-%m-%d'),
-        'test_start': test_start.strftime('%Y-%m-%d'),
-        'test_end': test_end.strftime('%Y-%m-%d'),
-        'final_refit_date': test_start.strftime('%Y-%m-%d'),
-        'interval_convention': '[start, end)',
-        'training_rule': 'CutoffDate < FitDate and LabelAvailableDate < FitDate',
-        'label_availability_rule': {
-            'Check-Out': 'max(ReservationStatusDate, ArrivalDate + TotalNights)',
-            'Canceled / No-Show': 'ReservationStatusDate',
-        },
-        'folds': [
-            {name: value.strftime('%Y-%m-%d') if isinstance(value, pd.Timestamp) else value
-             for name, value in window.items()}
-            for window in calendar
-        ],
-    })
-
-    # Return the configuration, memberships and audit summaries
-    return {
-        'config': actual_config,
-        'partition_membership': partition_membership.reset_index(drop=True),
-        'cv_membership': cv_membership,
-        'fit_eligibility': fit_eligibility,
-        'refit_membership': refit_membership.reset_index(drop=True),
-        'calibration_membership': calibration_membership,
-        'audit': {
-            'cv_summary': pd.DataFrame(cv_summary_rows),
-            'partition_summary': pd.DataFrame(partition_summary_rows),
-        },
+    dev_rows = joined.loc[development]
+    audit = {
+        "total_bookings": len(joined),
+        "unique_keys": len(membership),
+        "t14_deviations": 0,
+        "development": int(development.sum()),
+        "test_metadata_only": int((~development).sum()),
+        "final_refit_eligible_count_only": int(joined["FinalRefit"].sum()),
+        "by_hotel": {},
+        "folds": fold_audit,
+        "training_rule": (
+            "Partition == Dev and CutoffDate < FitDate and "
+            "LabelAvailableDate < FitDate and ExpectedCheckoutDate < FitDate"
+        ),
+        "final_refit_rule": (
+            "Partition == Dev and CutoffDate < TestStart and "
+            "LabelAvailableDate < TestStart and ExpectedCheckoutDate < TestStart"
+        ),
     }
+    for hotel in sorted(joined["Hotel"].unique()):
+        hotel_rows = joined["Hotel"].eq(hotel)
+        hotel_dev = dev_rows.loc[dev_rows["Hotel"].eq(hotel)]
+        audit["by_hotel"][hotel] = {
+            "dev": len(hotel_dev),
+            "test_metadata_only": int((hotel_rows & ~development).sum()),
+            "dev_positives": int(hotel_dev["IsCanceled"].sum()),
+            "dev_prevalence": float(hotel_dev["IsCanceled"].mean()),
+            "validation_by_fold": {
+                str(fold): int((hotel_rows & joined["ValFold"].eq(fold).fillna(False)).sum())
+                for fold in range(1, 5)
+            },
+        }
+    return membership, audit

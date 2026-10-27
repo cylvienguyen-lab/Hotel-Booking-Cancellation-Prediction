@@ -139,9 +139,10 @@ The notebook writes everything to `Evaluation pipeline/outputs/`.
   the hotel-level forecast and the booking-level outreach shortlist;
   direct overbooking is scoped as future work in Section 12 because the
   dataset lacks a true capacity figure and a measured walk cost.
-- It does not persist the fitted sklearn/TabM models to disk — the
-  refit returns predictions only. Model persistence is tracked as a
-  separate task on the Model pipeline side.
+- It does not persist models or do any refit itself. That is
+  `../Model pipeline/model_refit.ipynb`'s job; this notebook consumes
+  that notebook's outputs (`test_predictions.parquet` and the
+  `../Model pipeline/models/` registry).
 
 ## Finalists (committed)
 
@@ -279,15 +280,33 @@ Daily at 02:00 local time, for each hotel:
 1. Read all bookings where `CutoffDate = today` and the booking is
    active (not yet cancelled). Join holidays / FX / Google Trends from
    the Silver scoring tables.
-2. Score with `score_bookings(model, bookings_df)`.
-3. Join the scores with the booking metadata needed by downstream
-   systems (ADR, TotalNights, EstimatedRoomCount, ArrivalDate).
-4. Write the two deliverables (hotel-level forecast + booking-level
-   shortlist) to the ops dashboard. The Evaluation pipeline's
-   `evaluation_notebook.ipynb` Sections 10–11 are the reference
-   implementation.
-5. Log every prediction with `model_version`, `prediction_timestamp`
-   and the raw p_cancel for monitoring.
+2. Score with `score_bookings(model, bookings_df, as_of_date=today)`.
+3. Build the two deliverables with the standalone functions in
+   `Model pipeline/utils/model_outputs.py`:
+   - `aggregate_hotel_forecast(scored)` → `{"arrivals": ..., "occupancy": ...}`
+   - `generate_booking_shortlist(scored, k_per_hotel={"H1":10,"H2":20}, rank_by="p_cancel")`
+4. Write both to the ops dashboard. The eval notebook's Sections
+   10–11 are the reference implementation and call the same two
+   functions, so schemas are guaranteed to match.
+5. Log every prediction row with its `model_version`,
+   `prediction_as_of_date`, and `generated_at_utc` for monitoring.
+
+## Scoring-output schema
+
+Every row produced by `score_bookings` and the two aggregation
+functions carries three audit fields the deploy team must preserve
+through to the ops dashboard and monitoring store:
+
+| Field | Type | What it means |
+|---|---|---|
+| `model_version` | string | The model registry folder name (e.g. `H1-E2_v1_20170418`). Joinable 1-to-1 to `Model pipeline/models/<model_version>/metadata.json`. |
+| `prediction_as_of_date` | date (YYYY-MM-DD) | The *business cutoff* the prediction represents. In production this is the batch date (`today`). In the backtest it is the booking's CutoffDate. This is the field monitoring uses when it asks "how did the model do on predictions made on 2017-06-15?". |
+| `generated_at_utc` | datetime (ISO) | The actual UTC wall-clock when the row was written. Useful for job-run lineage (which batch invocation produced this?); not meaningful for business time. |
+
+Splitting these two fields matters because in a real-time scenario
+you may re-score the same cohort twice on different days (e.g. retrain,
+rerun), and monitoring needs both the business-time axis
+(`prediction_as_of_date`) and the batch-run axis (`generated_at_utc`).
 
 ## Monitoring hooks (what to watch)
 

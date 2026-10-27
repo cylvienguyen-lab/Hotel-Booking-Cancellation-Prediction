@@ -28,6 +28,7 @@ from __future__ import annotations
 import json
 import pickle
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -178,22 +179,47 @@ def _score_tabm(bookings: pd.DataFrame, tabm_bundle: dict) -> np.ndarray:
 def score_bookings(
     model: LoadedHotelModel,
     bookings: pd.DataFrame,
+    as_of_date: str | pd.Timestamp | None = None,
 ) -> pd.DataFrame:
     """Return per-booking p_cancel for one or more bookings.
 
-    The returned frame has columns ``Hotel``, ``Booking_ID``,
-    ``p_cancel``, ``model_version``, plus ``p_<component>`` columns for
-    audit.
+    Parameters
+    ----------
+    model : LoadedHotelModel
+        Fitted finalist, from ``load_hotel_model``.
+    bookings : DataFrame
+        One row per booking, with the feature columns the model needs.
+    as_of_date : str | Timestamp | None
+        The business-cutoff date these predictions represent (what day
+        we are standing on when we score). In production this is the
+        batch date (``CutoffDate = today``); in a backtest it is the
+        booking's CutoffDate. ISO ``YYYY-MM-DD`` string or Timestamp.
+        If None, defaults to the current UTC date.
 
-    All components (sklearn and TabM) are scored end-to-end; the
-    returned ``p_cancel`` is the equal-weight ensemble average across
-    components.
+    Returns
+    -------
+    DataFrame with columns:
+        Hotel, Booking_ID,
+        p_cancel,                    (ensemble average)
+        p_<component>,               (per-component p for audit)
+        model_version,               (joinable to the model registry)
+        prediction_as_of_date,       (business-cutoff date; what the row claims to represent)
+        generated_at_utc,            (actual UTC wall-clock when the row was produced)
     """
     if bookings.empty:
-        return pd.DataFrame(columns=["Hotel", "Booking_ID", "p_cancel", "model_version"])
+        return pd.DataFrame(columns=[
+            "Hotel", "Booking_ID", "p_cancel", "model_version",
+            "prediction_as_of_date", "generated_at_utc",
+        ])
 
     out = bookings[["Hotel", "Booking_ID"]].copy()
     out["model_version"] = model.model_version
+    if as_of_date is None:
+        as_of_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    else:
+        as_of_str = pd.Timestamp(as_of_date).strftime("%Y-%m-%d")
+    out["prediction_as_of_date"] = as_of_str
+    out["generated_at_utc"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     component_scores = {}
 
     for component in model.metadata["components"]:

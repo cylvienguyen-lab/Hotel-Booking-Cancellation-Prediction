@@ -261,7 +261,55 @@ the Silver-level transformations plus the external joins (holidays, FX,
 Google Trends) that produce the Gold predictor columns. The data
 pipeline in `Data pipeline/hotel_booking_pipeline/` implements this.
 
-### Runtime dependencies
+## Operational semantics — what the daily batch means for different users
+
+The model runs a daily batch at 02:00. One scored cohort per day: each
+booking is scored **exactly once** on its T-14 day (CutoffDate = batch
+date). The two output files are refreshed daily and written to the
+dashboard store; downstream dashboards aggregate from them.
+
+**For the operations team (booking shortlist)**
+- Each day's shortlist is a non-overlapping cohort of bookings arriving
+  14 days later. A booking appears on one day's list and never again.
+- Operations consumes the list same-day (contact the guest around T-14).
+- If operations wants to track per-booking contact state across days
+  (contacted / guest responded / outcome), that is PMS or CRM state —
+  not model output.
+  ![alt text](image.png)
+
+**For housekeeping and F&B (hotel-level forecast)**
+- Each day's forecast covers the forward window the current T-14 cohort
+  touches (new arrivals 14 days ahead; stay-extensions further out).
+- **Model inference stays daily.** New T-14 cohorts arrive each day;
+  weekly inference would miss up to 7 days of newly-visible bookings.
+- **Consumption cadence is weekly or ad-hoc.** The dashboard rolls up
+  daily forecast files into weekly summaries, with drill-down for
+  specific nights. Housekeeping and F&B check it once a week to plan
+  the next week's staffing and stock; they don't need to look daily.
+
+**Our forecast is not the full operational picture.** It is a **T-14
+initial-planning estimate**:
+- Covers ~89% of future occupancy (long-lead bookings scored at T-14).
+- Static per inference day (we don't re-score bookings as T drops from
+  14 to 0; cancellations after T-14 and new short-lead bookings are
+  not reflected in our model's output).
+
+The operational dashboard combines model output with the hotel's
+property-management system (PMS):
+
+```
+operational_dashboard   =  model_forecast             (ours, ~89% of future planning)
+                        +  short_lead_bookings        (PMS; booked after T-14)
+                        +  walk_ins                   (PMS; same-day arrivals)
+                        +  current_in_house_guests    (PMS; already checked in)
+                        -  cancellations_since_T14    (PMS; happened after T-14)
+```
+
+Treat our model as **initial 2-week planning**; the PMS carries
+real-time state. Operations' day-to-day decisions use the fused view,
+not our output alone.
+
+## Runtime dependencies
 
 Both hotels at inference time need Python with:
 - `scikit-learn==1.6.1` (hard pin — see version-compatibility section above)

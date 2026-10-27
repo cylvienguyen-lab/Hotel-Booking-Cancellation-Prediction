@@ -1,0 +1,129 @@
+{
+  "H1": {
+    "hotel": "H1",
+    "ensemble_id": "H1-E2",
+    "components_fitted": [
+      "RF30",
+      "XGB30"
+    ],
+    "components_skipped": [],
+    "component_detail": {
+      "RF30": {
+        "name": "RF30",
+        "family": "RF",
+        "added_features": [],
+        "feature_engineering": {},
+        "weight_detail": null,
+        "fit_detail": {
+          "convergence_warnings": [],
+          "preprocessing": "fold-trained Gold numeric/binary imputation and one-hot categories; unscaled numeric",
+          "weighted_estimator_fit": false,
+          "training_seconds": 4.168954651000604
+        },
+        "train_n": 15998,
+        "test_n": 3576
+      },
+      "XGB30": {
+        "name": "XGB30",
+        "family": "XGB",
+        "added_features": [],
+        "feature_engineering": {},
+        "weight_detail": null,
+        "fit_detail": {
+          "preprocessing": "Section 3 XGB preprocessor; unscaled numeric; one-hot cat",
+          "weighted_estimator_fit": false,
+          "training_seconds": 0.6308484279998083
+        },
+        "train_n": 15998,
+        "test_n": 3576
+      }
+    },
+    "n_train": 15998,
+    "n_test": 3576
+  },
+  "H2": {
+    "hotel": "H2",
+    "ensemble_id": "H2-E1",
+    "components_fitted": [
+      "C2",
+      "TabM-E8"
+    ],
+    "components_skipped": [],
+    "component_detail": {
+      "C2": {
+        "name": "C2",
+        "family": "RF",
+        "added_features": [
+          "HistoricalSegmentCancelRate"
+        ],
+        "feature_engineering": {
+          "smoothing": 20.0,
+          "training_history": "CutoffDate, LabelAvailableDate and ExpectedCheckoutDate strictly earlier than encoded row CutoffDate",
+          "validation_map": "all eligible training labels; unseen=training overall rate"
+        },
+        "weight_detail": {
+          "n": 29431,
+          "min": 0.20373612736762747,
+          "max": 2.5379481966331454,
+          "mean": 1.0,
+          "effective_sample_size": 21192.510400398547
+        },
+        "fit_detail": {
+          "convergence_warnings": [],
+          "preprocessing": "fold-trained Gold numeric/binary imputation and one-hot categories; unscaled numeric",
+          "weighted_estimator_fit": true,
+          "training_seconds": 7.798245694999423
+        },
+        "train_n": 29431,
+        "test_n": 7748
+      },
+      "TabM-E8": {
+        "name": "TabM-E8",
+        "family": "TabM",
+        "fit_detail": {
+          "preprocessing": "Train median imputation + StandardScaler for numeric/binary; Train-only categorical integer mapping; missing/unseen index 0",
+          "categorical_cardinalities": [
+            13,
+            5,
+            8,
+            5,
+            8,
+            4,
+            5
+          ],
+          "device": "cpu",
+          "optimizer": "AdamW",
+          "architecture": {
+            "d_block": 64,
+            "n_blocks": 2,
+            "k": 8,
+            "dropout": 0.1
+          },
+          "training_params": {
+            "optimizer": "AdamW",
+            "learning_rate": 0.001,
+            "weight_decay": 0.0001,
+            "batch_size": 1024,
+            "epochs": 8
+          },
+          "stopping": "fixed epoch budget; no outer-Validation monitoring",
+          "train_loss_by_epoch": [
+            0.5688338813271866,
+            0.4003286068278518,
+            0.37995274053518,
+            0.37055345403200696,
+            0.3613452650800295,
+            0.35301701625647247,
+            0.34709072135719726,
+            0.3421162905133604
+          ],
+          "training_seconds": 7.293628641999021
+        },
+        "train_n": 29431,
+        "test_n": 7748
+      }
+    },
+    "n_train": 29431,
+    "n_test": 7748
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "numeric_predictors": [
+    "LeadTime",
+    "ArrivalDateYear",
+    "ArrivalDateWeekNumber",
+    "ArrivalDateDayOfMonth",
+    "StaysInWeekendNights",
+    "StaysInWeekNights",
+    "Adults",
+    "Children",
+    "Babies",
+    "IsRepeatedGuest",
+    "PreviousCancellations",
+    "PreviousBookingsNotCanceled",
+    "BookingChanges",
+    "DaysInWaitingList",
+    "ADR",
+    "TotalOfSpecialRequests",
+    "ArrivalDayOfWeek",
+    "TotalNights",
+    "PartySize",
+    "IsPortugalHoliday",
+    "EURUSD",
+    "HotelSearchInterest",
+    "FlightSearchInterest"
+  ],
+  "categorical_predictors": [
+    "ArrivalDateMonth",
+    "Meal",
+    "MarketSegment",
+    "DistributionChannel",
+    "ReservedRoomType",
+    "DepositType",
+    "CustomerType"
+  ],
+  "metadata_only": [
+    "Booking_ID",
+    "Hotel",
+    "ArrivalDate",
+    "BookingCreatedDate",
+    "CutoffDate",
+    "FXObservationDate",
+    "EstimatedRoomCount",
+    "TrendWeekStart",
+    "TrendWeekEnd",
+    "TrendAvailableDate"
+  ],
+  "target": "IsCanceled",
+  "room_count_role": "assumed reporting estimate; not a baseline predictor",
+  "excluded_predictors": [
+    "ADRReview",
+    "Agent",
+    "ArrivingPassengers",
+    "AssignedRoomType",
+    "Company",
+    "Country",
+    "DateReview",
+    "EligibleT14",
+    "RequiredCarParkingSpaces",
+    "ReservationStatus",
+    "ReservationStatusDate"
+  ],
+  "preprocessing": "Categories remain text; documented missing values are retained",
+  "assumption": "Retained booking details are treated as unchanged before the T-14 cutoff.",
+  "google_trends": {
+    "role": "offline experimental predictors",
+    "terms": {
+      "H1": [
+        "Algarve hotels",
+        "flights to Faro"
+      ],
+      "H2": [
+        "Lisbon hotels",
+        "flights to Lisbon"
+      ]
+    },
+    "source": "Fixed four-term worldwide Web Search export, 2015-01-01 to 2017-08-31",
+    "availability_rule": "Latest full week with TrendWeekEnd + 7 days <= CutoffDate; lag is an assumption, not a verified release date",
+    "limitation": "Retrospective sampled 0-100 export; not an original historical vintage. Consistent scaling for future scoring remains unresolved."
+  }
+}

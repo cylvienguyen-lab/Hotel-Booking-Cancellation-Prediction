@@ -1,0 +1,9 @@
+{
+  "file": "exchange_rates/ecb_eurusd_2014_2017.csv",
+  "url": "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=2014-01-01&endPeriod=2017-08-31&format=csvdata",
+  "retrieved_at_utc": "2026-10-13T00:30:08.739246+00:00",
+  "final_url": "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=2014-01-01&endPeriod=2017-08-31&format=csvdata",
+  "status": "downloaded",
+  "bytes": 194607,
+  "sha256": "4b6dd2645d2b5114b67854e7ec4b85c7f9a873e8b1c98a950101081ede539a3a"
+}

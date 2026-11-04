@@ -1,0 +1,9 @@
+{
+  "file": "holidays/holidays_PT_2017.json",
+  "url": "https://date.nager.at/api/v3/PublicHolidays/2017/PT",
+  "retrieved_at_utc": "2026-10-13T00:30:08.408503+00:00",
+  "final_url": "https://date.nager.at/api/v3/PublicHolidays/2017/PT",
+  "status": "downloaded",
+  "bytes": 3084,
+  "sha256": "39c6ed9dd68be273f70b0c703b8dbfb33e937383887717ba8a51c8d8b4689c99"
+}

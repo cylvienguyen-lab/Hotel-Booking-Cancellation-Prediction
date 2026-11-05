@@ -1,0 +1,82 @@
+services:
+  data-job:
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/data"
+    command: ["python", "run_data.py"]
+
+  development-job:
+    profiles: ["jobs"]
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/model"
+    command: ["python", "run_development.py"]
+
+  selection-job:
+    profiles: ["jobs"]
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/evaluation"
+    command: ["python", "run_validation_selection.py"]
+
+  train-job:
+    profiles: ["jobs"]
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/model"
+    command: ["python", "run_train.py"]
+
+  test-evaluation-job:
+    profiles: ["jobs"]
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/evaluation"
+    command: ["python", "run_test_evaluation.py"]
+
+  bootstrap-demo:
+    profiles: ["jobs"]
+    build: .
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project"
+    environment:
+      PATH: "/opt/airflow-venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      AIRFLOW_HOME: "/workspace/Project/artifacts/airflow"
+      AIRFLOW__CORE__DAGS_FOLDER: "/workspace/Project/dags"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      PYTHONIOENCODING: "utf-8"
+    command:
+      - sh
+      - -c
+      - mkdir -p /workspace/Project/artifacts/airflow && /opt/airflow-venv/bin/airflow db migrate && /opt/airflow-venv/bin/airflow dags test bootstrap_demo --dagfile-path /workspace/Project/dags/bootstrap_demo.py && /usr/local/bin/python /workspace/Project/pipelines/verify_bootstrap.py
+
+  airflow-ui:
+    profiles: ["ui"]
+    build: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project"
+    environment:
+      PATH: "/opt/airflow-venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+      AIRFLOW_HOME: "/workspace/Project/artifacts/airflow"
+      AIRFLOW__CORE__DAGS_FOLDER: "/workspace/Project/dags"
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__API__HOST: "0.0.0.0"
+    command: ["/opt/airflow-venv/bin/airflow", "standalone"]
+
+  model-jupyter:
+    profiles: ["dev"]
+    build: .
+    ports:
+      - "127.0.0.1:8889:8889"
+    volumes:
+      - .:/workspace/Project
+    working_dir: "/workspace/Project/pipelines/model"
+    command: ["jupyter", "lab", "--ip=0.0.0.0", "--port=8889", "--no-browser", "--allow-root", "--ServerApp.root_dir=/workspace/Project"]

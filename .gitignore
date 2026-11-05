@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+data/datamart/
+artifacts/
+
+# Fixed input snapshots required for a clean bootstrap checkout.
+!data/raw/H1.csv
+!data/raw/H2.csv
+!data/external/exchange_rates/ecb_eurusd_2014_2017.csv
+!data/external/google_trends/google_trends_hotels_flights_weekly_2015_2017.csv

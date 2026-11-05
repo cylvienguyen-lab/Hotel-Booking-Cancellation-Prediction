@@ -1,0 +1,45 @@
+[
+    {
+        "file":  "holidays/holidays_PT_2015.json",
+        "url":  "https://date.nager.at/api/v3/PublicHolidays/2015/PT",
+        "retrieved_at_utc":  "2026-10-13T00:30:07.723064+00:00",
+        "final_url":  "https://date.nager.at/api/v3/PublicHolidays/2015/PT",
+        "status":  "downloaded",
+        "bytes":  3084,
+        "sha256":  "080a2db81280deea19d42312ad711ed157818dc039c3859238e7881fd1ab67ce"
+    },
+    {
+        "file":  "holidays/holidays_PT_2016.json",
+        "url":  "https://date.nager.at/api/v3/PublicHolidays/2016/PT",
+        "retrieved_at_utc":  "2026-10-13T00:30:08.074992+00:00",
+        "final_url":  "https://date.nager.at/api/v3/PublicHolidays/2016/PT",
+        "status":  "downloaded",
+        "bytes":  3084,
+        "sha256":  "e966f98ef4e1fc92e20034d40389253b44245193d6d51b50cd4caab732ec71a7"
+    },
+    {
+        "file":  "holidays/holidays_PT_2017.json",
+        "url":  "https://date.nager.at/api/v3/PublicHolidays/2017/PT",
+        "retrieved_at_utc":  "2026-10-13T00:30:08.408503+00:00",
+        "final_url":  "https://date.nager.at/api/v3/PublicHolidays/2017/PT",
+        "status":  "downloaded",
+        "bytes":  3084,
+        "sha256":  "39c6ed9dd68be273f70b0c703b8dbfb33e937383887717ba8a51c8d8b4689c99"
+    },
+    {
+        "file":  "exchange_rates/ecb_eurusd_2014_2017.csv",
+        "url":  "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=2014-01-01\u0026endPeriod=2017-08-31\u0026format=csvdata",
+        "retrieved_at_utc":  "2026-10-13T00:30:08.739246+00:00",
+        "final_url":  "https://data-api.ecb.europa.eu/service/data/EXR/D.USD.EUR.SP00.A?startPeriod=2014-01-01\u0026endPeriod=2017-08-31\u0026format=csvdata",
+        "status":  "downloaded",
+        "bytes":  194607,
+        "sha256":  "4b6dd2645d2b5114b67854e7ec4b85c7f9a873e8b1c98a950101081ede539a3a"
+    },
+    {
+        "file":  "google_trends/google_trends_hotels_flights_weekly_2015_2017.csv",
+        "sha256":  "03fb7bf9646659a3bd39d31db54a623cc73282da200dfa1db5941ec3bba34365",
+        "status":  "user_downloaded",
+        "url":  "https://trends.google.com/trends/explore?date=2015-01-01%202017-08-31\u0026q=Algarve%20hotels,Lisbon%20hotels,flights%20to%20Faro,flights%20to%20Lisbon\u0026hl=en",
+        "scope":  "Fixed historical export for offline experiments; weekly availability buffer assumed"
+    }
+]

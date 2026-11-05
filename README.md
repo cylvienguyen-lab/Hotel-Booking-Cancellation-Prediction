@@ -1,9 +1,44 @@
-﻿# Hotel booking bootstrap pipeline
+# Hotel booking bootstrap pipeline
 
 This directory contains the fixed input snapshots and executable source for a
 reproducible historical Data → Development → Validation selection → Train →
 Test evaluation run. Generated data and model artifacts are ignored by Git.
-Inference and monitoring are not part of this bootstrap yet.
+The local replay uses those saved models in a second Airflow DAG.
+
+## Replay daily inference and monitoring
+
+From the project root, run these commands in order:
+
+```sh
+docker compose run --build --rm bootstrap-demo
+docker compose run --build --rm monitoring-demo
+```
+
+If bootstrap has already completed, run only the second command. It uses the
+saved H1 and H2 models to replay May through July 2017 from the historical Test period.
+
+| Airflow task | Script in `pipelines/operations/` | What it does |
+| --- | --- | --- |
+| `inference` | `inference.py` | Scores active bookings each day at T−14. Saves one probability per booking, the daily forecast and the contact list (H1: up to 10, H2: up to 20). |
+| `monitoring` | `monitoring.py` | Checks scored IDs against Gold and compares inputs and score PSI with validation. Checks outcomes at month-end and again the following month. Reports ROC AUC, Brier score and forecast errors once all bookings in the hotel cohort have known outcomes. |
+| `report` | `report.py` | Combines the latest monthly assessments into CSVs and plots model quality, input coverage, outreach and forecast errors. |
+
+The report task prints the `artifacts/operations/<requested-range>/<run-hash>/trends/`
+directory. Open `model.png` for ROC AUC, score PSI and external input coverage;
+`business.png` for outreach and forecast accuracy; and `metrics.csv` for the
+underlying values. Each monthly monitoring directory also contains daily counts and
+outcomes observed at each assessment.
+
+To replay different scoring dates, set the DAG parameters `start` and `end`.
+The default `as_of=auto` checks outcomes at month-end and again the following month.
+
+### Follow-up and closure
+
+| Trigger | Owner and action | Evidence to close |
+| --- | --- | --- |
+| A Gold booking ID is missing, unexpected or duplicated in saved scores | Pipeline owner inspects the logged IDs and input version, corrects the scoring issue and replays the affected cutoff range in a fresh run. The monitoring task blocks publication on a mismatch. | Reconcile the full list of Gold and scored IDs and confirm the corrected counts are in the monthly CSV. |
+| Too few outcomes have matured | Model owner checks the coverage table at the next assessment. | Release outcome-based metrics once all outcomes in that hotel/month are observable. |
+| Persistent planning error, weaker shortlist results or a change in scores | Model owner reviews input mix and probability calibration with hotel operations. Check several comparable cohorts and staffing/contact implications before deciding whether to adjust the model. | Record the owner, action and decision. For a model change, validate and approve the candidate, then compare a later mature cohort with the reference before closing. |
 
 ## Requirements
 
@@ -26,7 +61,9 @@ Inference and monitoring are not part of this bootstrap yet.
 | `artifacts/development/` | Generated split, experiments, and Development audit |
 | `artifacts/evaluation/` | Generated validation choice, Test results, and evaluation audits |
 | `artifacts/train/` | Generated saved models and Train audit |
-| `dags/` | Airflow `bootstrap_demo` DAG |
+| `dags/` | Airflow DAGs for model development (`bootstrap_demo`) and daily scoring (`inference_monitoring`) |
+| `pipelines/operations/` | Daily scoring, monthly monitoring and reporting |
+| `artifacts/operations/` | Scores, forecast tables and monitoring charts for each replay |
 | `artifacts/airflow/` | Generated Airflow metadata and task logs |
 
 ## Run the complete bootstrap

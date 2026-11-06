@@ -5,6 +5,18 @@ reproducible historical Data → Development → Validation selection → Train 
 Test evaluation run. Generated data and model artifacts are ignored by Git.
 The local replay uses those saved models in a second Airflow DAG.
 
+## Get the code
+
+Repository: <https://github.com/cylvienguyen-lab/Hotel-Booking-Cancellation-Prediction/tree/hotel-cancellation-mlops-pipeline>
+
+```sh
+git clone --branch hotel-cancellation-mlops-pipeline https://github.com/cylvienguyen-lab/Hotel-Booking-Cancellation-Prediction.git
+cd Hotel-Booking-Cancellation-Prediction
+```
+
+The default branch (`notebook-no-dvc`) holds an older layout; use the
+branch above. Start Docker Desktop before running any command below.
+
 ## Replay daily inference and monitoring
 
 From the project root, run these commands in order:
@@ -162,3 +174,16 @@ To inspect the source notebooks in Jupyter:
 ```sh
 docker compose --profile dev up model-jupyter
 ```
+
+## Shut down
+
+The `run` commands exit on their own. To stop and remove anything still
+running (Airflow UI, Jupyter) and the project network:
+
+```sh
+docker compose --profile ui --profile jobs --profile dev down
+```
+
+Generated data, models and Airflow history stay in `data/datamart/` and
+`artifacts/`. To start from scratch, rerun `bootstrap-demo`; its first
+task clears previous outputs.
